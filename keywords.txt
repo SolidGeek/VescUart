@@ -11,9 +11,13 @@ VescUart 	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-setSerialPort
-setDebugPort
-getVescValues	KEYWORD2
-printVescValues	KEYWORD2
-setNunchuckValues
-printVescValues
+setSerialPort		KEYWORD2
+setDebugPort		KEYWORD2
+getVescValues		KEYWORD2
+printVescValues		KEYWORD2
+setNunchuckValues	KEYWORD2
+printVescValues		KEYWORD2
+setCurrent			KEYWORD2
+setBrakeCurrent		KEYWORD2
+setRPM				KEYWORD2
+setDuty				KEYWORD2

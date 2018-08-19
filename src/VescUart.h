@@ -23,10 +23,10 @@ class VescUart
 
 	/** Struct to hold the nunchuck values to send over UART */
 	struct nunchuckPackage {
-		int	valXJoy;
-		int	valYJoy;
-		bool valUpperButton;
-		bool valLowerButton;
+		int	valueX;
+		int	valueY;
+		bool upperButton; // valUpperButton
+		bool lowerButton; // valLowerButton
 	};
 
 
@@ -44,14 +44,15 @@ class VescUart
 
 		/**
 		 * @brief      Set the serial port for uart communication
+		 * @param      port  - Reference to Serial port (pointer) 
 		 */
-		void setSerialPort(HardwareSerial* _serialPort);
+		void setSerialPort(HardwareSerial* port);
 
 		/**
 		 * @brief      Set the serial port for debugging
-		 * @param      Serial object 
+		 * @param      port  - Reference to Serial port (pointer) 
 		 */
-		void setDebugPort(Stream* _debugSerialPort);
+		void setDebugPort(Stream* port);
 
 		/**
 		 * @brief      Sends a command to VESC and stores the returned data
@@ -64,6 +65,30 @@ class VescUart
 		 * @brief      Sends values for joystick and buttons to the nunchuck app
 		 */
 		void setNunchuckValues(void);
+
+		/**
+		 * @brief      Set the current to drive the motor
+		 * @param      current  - The current to apply
+		 */
+		void setCurrent(float current);
+
+		/**
+		 * @brief      Set the current to brake the motor
+		 * @param      brakeCurrent  - The current to apply
+		 */
+		void setBrakeCurrent(float brakeCurrent);
+
+		/**
+		 * @brief      Set the rpm of the motor
+		 * @param      rpm  - The desired RPM (actually eRPM = RPM * poles)
+		 */
+		void setRPM(float rpm);
+
+		/**
+		 * @brief      Set the duty of the motor
+		 * @param      duty  - The desired duty (0.0-1.0)
+		 */
+		void setDuty(float duty);
 
 		/**
 		 * @brief      Help Function to print struct dataPackage over Serial for Debug

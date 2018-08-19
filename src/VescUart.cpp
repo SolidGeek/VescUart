@@ -1,22 +1,21 @@
 #include "VescUart.h"
 #include <HardwareSerial.h>
 
-
 VescUart::VescUart(void){
-	nunchuck.valXJoy         = 127;
-	nunchuck.valYJoy         = 127;
-	nunchuck.valLowerButton  = false;
-	nunchuck.valLowerButton  = false;
+	nunchuck.valueX         = 127;
+	nunchuck.valueY         = 127;
+	nunchuck.lowerButton  	= false;
+	nunchuck.upperButton  	= false;
 }
 
-void VescUart::setSerialPort(HardwareSerial* _serialPort)
+void VescUart::setSerialPort(HardwareSerial* port)
 {
-	serialPort = _serialPort;
+	serialPort = port;
 }
 
-void VescUart::setDebugPort(Stream* _debugPort)
+void VescUart::setDebugPort(Stream* port)
 {
-	debugPort = _debugPort;
+	debugPort = port;
 }
 
 int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
@@ -24,14 +23,13 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 	// Messages <= 255 starts with "2", 2nd byte is length
 	// Messages > 255 starts with "3" 2nd and 3rd byte is length combined with 1st >>8 and then &0xFF
 
-	unsigned int counter = 0;
-	unsigned int endMessage = 256;
+	uint16_t counter = 0;
+	uint16_t endMessage = 256;
 	bool messageRead = false;
 	uint8_t messageReceived[256];
-	unsigned int lenPayload = 0;
+	uint16_t lenPayload = 0;
 	
-	unsigned long timeout = 0;
-	timeout = millis() + 100;
+	uint32_t timeout = millis() + 100; // Defining the timestamp for timeout (100ms before timeout)
 
 	while ( millis() < timeout && messageRead == false) {
 
@@ -50,11 +48,14 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 
 					case 3:
 						// ToDo: Add Message Handling > 255 (starting with 3)
+						if( debugPort != NULL ){
+							debugPort->println("Message is larger than 256 bytes - not supported");
+						}
 					break;
 
 					default:
 						if( debugPort != NULL ){
-							debugPort->println("No start bit");
+							debugPort->println("Unvalid start bit");
 						}
 					break;
 				}
@@ -70,16 +71,16 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 					debugPort->println("End of message reached!");
 				}
 				messageRead = true;
-				break; //Exit if end of message is reached, even if there is still more data in buffer.
+				break; // Exit if end of message is reached, even if there is still more data in the buffer.
 			}
 		}
 	}
-
 	if(messageRead == false && debugPort != NULL ) {
 		debugPort->println("Timeout");
 	}
 	
 	bool unpacked = false;
+
 	if (messageRead) {
 		unpacked = unpackPayload(messageReceived, endMessage, payloadReceived);
 	}
@@ -181,9 +182,9 @@ bool VescUart::processReadPacket(uint8_t * message) {
 	message++; // Removes the packetId from the actual message (payload)
 
 	switch (packetId){
-		case COMM_GET_VALUES:
+		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
-			ind = 4; // Skip the first 4 bytes
+			ind = 4; // Skip the first 4 bytes 
 			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			ind += 8; // Skip the next 8 bytes
@@ -230,10 +231,10 @@ void VescUart::setNunchuckValues() {
 	uint8_t payload[11];
 
 	payload[ind++] = COMM_SET_CHUCK_DATA;
-	payload[ind++] = nunchuck.valXJoy;
-	payload[ind++] = nunchuck.valYJoy;
-	buffer_append_bool(payload, nunchuck.valLowerButton, &ind);
-	buffer_append_bool(payload, nunchuck.valUpperButton, &ind);
+	payload[ind++] = nunchuck.valueX;
+	payload[ind++] = nunchuck.valueY;
+	buffer_append_bool(payload, nunchuck.lowerButton, &ind);
+	buffer_append_bool(payload, nunchuck.upperButton, &ind);
 	
 	// Acceleration Data. Not used, Int16 (2 byte)
 	payload[ind++] = 0;
@@ -245,11 +246,51 @@ void VescUart::setNunchuckValues() {
 
 	if(debugPort != NULL){
 		debugPort->println("Data reached at setNunchuckValues:");
-		debugPort->print("valXJoy = "); debugPort->print(nunchuck.valXJoy); debugPort->print(" valYJoy = "); debugPort->println(nunchuck.valYJoy);
-		debugPort->print("LowerButton = "); debugPort->print(nunchuck.valLowerButton); debugPort->print(" UpperButton = "); debugPort->println(nunchuck.valUpperButton);
+		debugPort->print("valueX = "); debugPort->print(nunchuck.valueX); debugPort->print(" valueY = "); debugPort->println(nunchuck.valueY);
+		debugPort->print("LowerButton = "); debugPort->print(nunchuck.lowerButton); debugPort->print(" UpperButton = "); debugPort->println(nunchuck.upperButton);
 	}
 
 	packSendPayload(payload, 11);
+}
+
+void VescUart::setCurrent(float current) {
+	int32_t index = 0;
+	uint8_t payload[5];
+
+	payload[index++] = COMM_SET_CURRENT;
+	buffer_append_int32(payload, (int32_t)(current * 1000), &index);
+
+	packSendPayload(payload, 5);
+}
+
+void VescUart::setBrakeCurrent(float brakeCurrent) {
+	int32_t index = 0;
+	uint8_t payload[5];
+
+	payload[index++] = COMM_SET_CURRENT_BRAKE;
+	buffer_append_int32(payload, (int32_t)(brakeCurrent * 1000), &index);
+
+	packSendPayload(payload, 5);
+}
+
+void VescUart::setRPM(float rpm) {
+	int32_t index = 0;
+	uint8_t payload[5];
+
+	payload[index++] = COMM_SET_RPM ;
+	buffer_append_int32(payload, (int32_t)(rpm), &index);
+
+	packSendPayload(payload, 5);
+}
+
+void VescUart::setDuty(float duty) {
+	int32_t index = 0;
+	uint8_t payload[5];
+
+	payload[index++] = COMM_SET_DUTY;
+	buffer_append_int32(payload, (int32_t)(duty * 100000), &index);
+
+	packSendPayload(payload, 5);
 }
 
 void VescUart::serialPrint(uint8_t * data, int len) {
@@ -263,7 +304,6 @@ void VescUart::serialPrint(uint8_t * data, int len) {
 		debugPort->println("");
 	}
 }
-
 
 void VescUart::printVescValues() {
 	if(debugPort != NULL){
