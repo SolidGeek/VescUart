@@ -1,0 +1,19 @@
+#######################################
+# Syntax Coloring Map For vescUart
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+VescUart 	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+setSerialPort
+setDebugPort
+getVescValues	KEYWORD2
+printVescValues	KEYWORD2
+setNunchuckValues
+printVescValues
