@@ -12,13 +12,23 @@ To use the library you will have initiate the VescUart class and set the Serial 
 VescUart UART;
 
 void setup() {
+  Serial.begin(115200);
 
-  Serial1.begin(19200);
+  while (!Serial) {;}
 
-  while (!Serial1) {;}
-
-  UART.setSerialPort(&Serial1);
+  UART.setSerialPort(&Serial);
 }
 ```
 
 You can now safely use the functions and change the values of the class. 
+
+Getting VESC telemetry is easy:
+
+```
+if ( UART.getVescValues() ) {
+  Serial.println(UART.data.rpm);
+  Serial.println(UART.data.inpVoltage);
+  Serial.println(UART.data.ampHours);
+  Serial.println(UART.data.tachometerAbs);
+}
+```
