@@ -8,7 +8,9 @@ Arduino library for interfacing with a VESC over UART. This library is based upo
 
 To use the library you will have initiate the VescUart class and set the Serial port for UART communcation.
 
-```
+```cpp
+#include <VescUart.h>
+
 VescUart UART;
 
 void setup() {
@@ -24,7 +26,7 @@ You can now safely use the functions and change the values of the class.
 
 Getting VESC telemetry is easy:
 
-```
+```cpp
 if ( UART.getVescValues() ) {
   Serial.println(UART.data.rpm);
   Serial.println(UART.data.inpVoltage);
