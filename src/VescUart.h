@@ -19,6 +19,9 @@ class VescUart
 		float ampHoursCharged;
 		long tachometer;
 		long tachometerAbs;
+		float tempMosfet;
+		float tempMotor;
+		mc_fault_code error; 
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
