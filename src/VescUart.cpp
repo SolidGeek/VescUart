@@ -189,7 +189,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			ind += 8; // Skip the next 8 bytes
 			data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
-			data.rpm 				= buffer_get_int32(message, &ind);
+			data.rpm 				= buffer_get_float32(message, 1.0, &ind);
 			data.inpVoltage 		= buffer_get_float16(message, 10.0, &ind);
 			data.ampHours 			= buffer_get_float32(message, 10000.0, &ind);
 			data.ampHoursCharged 	= buffer_get_float32(message, 10000.0, &ind);
@@ -315,7 +315,9 @@ void VescUart::printVescValues() {
 		debugPort->print("rpm: "); 				debugPort->println(data.rpm);
 		debugPort->print("inputVoltage: "); 	debugPort->println(data.inpVoltage);
 		debugPort->print("ampHours: "); 		debugPort->println(data.ampHours);
-		debugPort->print("ampHoursCharges: "); 	debugPort->println(data.ampHoursCharged);
+		debugPort->print("ampHoursCharged: "); 	debugPort->println(data.ampHoursCharged);
+		debugPort->print("wattHours: "); 		debugPort->println(data.wattHours);
+		debugPort->print("wattHoursCharged: "); debugPort->println(data.wattHoursCharged);
 		debugPort->print("tachometer: "); 		debugPort->println(data.tachometer);
 		debugPort->print("tachometerAbs: "); 	debugPort->println(data.tachometerAbs);
 		debugPort->print("tempMosfet: "); 		debugPort->println(data.tempMosfet);

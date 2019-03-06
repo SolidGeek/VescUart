@@ -13,7 +13,7 @@ class VescUart
 		float avgMotorCurrent;
 		float avgInputCurrent;
 		float dutyCycleNow;
-		long rpm;
+		float rpm;
 		float inpVoltage;
 		float ampHours;
 		float ampHoursCharged;
