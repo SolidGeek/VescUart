@@ -1,5 +1,4 @@
 #include "VescUart.h"
-#include <HardwareSerial.h>
 
 VescUart::VescUart(void){
 	nunchuck.valueX         = 127;
@@ -8,7 +7,7 @@ VescUart::VescUart(void){
 	nunchuck.upperButton  	= false;
 }
 
-void VescUart::setSerialPort(HardwareSerial* port)
+void VescUart::setSerialPort(Stream* port)
 {
 	serialPort = port;
 }
