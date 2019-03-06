@@ -1,13 +1,13 @@
 # VescUart
 
-Arduino library for interfacing with a VESC over UART. This library is based upon the library written by RollingGecko (https://github.com/RollingGecko/VescUartControl). The library is updated for the newest VESC firmware (FW3.40) and cleaned up a bit. The library is not backwards compatible, so you have to upload the newest firmware to your VESC.
+Arduino library for interfacing with a VESC over UART. This library is based upon the library written by RollingGecko (https://github.com/RollingGecko/VescUartControl). The library is updated for the newest VESC firmware (FW3.51) and cleaned up a bit. The library is not backwards compatible, so you have to upload the newest firmware to your VESC.
 
 **Important:** This is not a dropin replacement for RollingGeckos library. You will have to make some changes to your software, as all functions and values is now within a class, see below.
 
-## Implementation
-
-To use the library you will have initiate the VescUart class and set the Serial port for UART communcation.
-
+## Usage
+  
+Initialize VescUart class and select Serial port for UART communication.  
+  
 ```cpp
 #include <VescUart.h>
 
@@ -23,9 +23,9 @@ void setup() {
 ```
 
 You can now safely use the functions and change the values of the class. 
-
-Getting VESC telemetry is easy:
-
+  
+Getting VESC telemetry:
+  
 ```cpp
 if ( UART.getVescValues() ) {
   Serial.println(UART.data.rpm);
@@ -34,3 +34,6 @@ if ( UART.getVescValues() ) {
   Serial.println(UART.data.tachometerAbs);
 }
 ```
+  
+You can find example usage and more information in the examples directory.  
+  
