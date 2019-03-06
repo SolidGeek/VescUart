@@ -193,7 +193,8 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.inpVoltage 		= buffer_get_float16(message, 10.0, &ind);
 			data.ampHours 			= buffer_get_float32(message, 10000.0, &ind);
 			data.ampHoursCharged 	= buffer_get_float32(message, 10000.0, &ind);
-			ind += 8; // Skip the next 8 bytes 
+			data.wattHours			= buffer_get_float32(message, 10000.0, &ind);
+			data.wattHoursCharged	= buffer_get_float32(message, 10000.0, &ind);
 			data.tachometer 		= buffer_get_int32(message, &ind);
 			data.tachometerAbs 		= buffer_get_int32(message, &ind);
 			data.error 				= message[ind];

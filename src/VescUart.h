@@ -17,6 +17,8 @@ class VescUart
 		float inpVoltage;
 		float ampHours;
 		float ampHoursCharged;
+		float wattHours;
+		float wattHoursCharged;
 		long tachometer;
 		long tachometerAbs;
 		float tempMosfet;
