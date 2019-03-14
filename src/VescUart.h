@@ -13,10 +13,12 @@ class VescUart
 		float avgMotorCurrent;
 		float avgInputCurrent;
 		float dutyCycleNow;
-		long rpm;
+		float rpm;
 		float inpVoltage;
 		float ampHours;
 		float ampHoursCharged;
+		float wattHours;
+		float wattHoursCharged;
 		long tachometer;
 		long tachometerAbs;
 		float tempMosfet;
@@ -39,17 +41,17 @@ class VescUart
 		 */
 		VescUart(void);
 
-		/** Variabel to hold measurements returned from VESC */
+		/** Variable to hold measurements returned from VESC */
 		dataPackage data; 
 
-		/** Variabel to hold nunchuck values */
+		/** Variable to hold nunchuck values */
 		nunchuckPackage nunchuck; 
 
 		/**
 		 * @brief      Set the serial port for uart communication
 		 * @param      port  - Reference to Serial port (pointer) 
 		 */
-		void setSerialPort(HardwareSerial* port);
+		void setSerialPort(Stream* port);
 
 		/**
 		 * @brief      Set the serial port for debugging
@@ -100,10 +102,10 @@ class VescUart
 
 	private: 
 
-		/** Variabel to hold the reference to the Serial object to use for UART */
-		HardwareSerial* serialPort = NULL;
+		/** Variable to hold the reference to the Serial object to use for UART */
+		Stream* serialPort = NULL;
 
-		/** Variabel to hold the reference to the Serial object to use for debugging. 
+		/** Variable to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */
 		Stream* debugPort = NULL;
 
