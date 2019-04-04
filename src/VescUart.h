@@ -10,6 +10,7 @@ class VescUart
 {
 	/** Struct to store the telemetry data returned by the VESC */
 	struct dataPackage {
+		float tempMotor;
 		float avgMotorCurrent;
 		float avgInputCurrent;
 		float dutyCycleNow;
@@ -17,8 +18,12 @@ class VescUart
 		float inpVoltage;
 		float ampHours;
 		float ampHoursCharged;
+		float watt_hours;
+		float watt_hours_charged;
 		long tachometer;
 		long tachometerAbs;
+		uint8_t fault;
+		float throttlePPM;
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
@@ -37,20 +42,20 @@ class VescUart
 		VescUart(void);
 
 		/** Variabel to hold measurements returned from VESC */
-		dataPackage data; 
+		dataPackage data;
 
 		/** Variabel to hold nunchuck values */
-		nunchuckPackage nunchuck; 
+		nunchuckPackage nunchuck;
 
 		/**
 		 * @brief      Set the serial port for uart communication
-		 * @param      port  - Reference to Serial port (pointer) 
+		 * @param      port  - Reference to Serial port (pointer)
 		 */
 		void setSerialPort(HardwareSerial* port);
 
 		/**
 		 * @brief      Set the serial port for debugging
-		 * @param      port  - Reference to Serial port (pointer) 
+		 * @param      port  - Reference to Serial port (pointer)
 		 */
 		void setDebugPort(Stream* port);
 
@@ -95,12 +100,22 @@ class VescUart
 		 */
 		void printVescValues(void);
 
-	private: 
+		/**
+		 * @brief      Request PPM values to local VESC
+		 */
+		bool getLocalVescPPM(void);
+
+		/**
+		 * @brief      Request PPM values to Master VESC over CANbus
+		 */
+		bool getMasterVescPPM(uint8_t id);
+
+	private:
 
 		/** Variabel to hold the reference to the Serial object to use for UART */
 		HardwareSerial* serialPort = NULL;
 
-		/** Variabel to hold the reference to the Serial object to use for debugging. 
+		/** Variabel to hold the reference to the Serial object to use for debugging.
 		  * Uses the class Stream instead of HarwareSerial */
 		Stream* debugPort = NULL;
 
