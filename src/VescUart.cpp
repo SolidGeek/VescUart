@@ -194,18 +194,42 @@ bool VescUart::processReadPacket(uint8_t * message) {
 		case COMM_GET_VALUES_SETUP_SELECTIVE: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
 			ind = 4; // Skip the mask
-			data.tempMotor 		= buffer_get_float16(message, 10.0, &ind);
+			//data.tempFET =					buffer_get_float16(message, 10.0, &ind);
+			data.tempMotor 		= 		buffer_get_float16(message, 10.0, &ind);
 			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
+			//data.avgIdCurrent = buffer_get_float32(message, 100.0, &ind);
+			//data.avgIqCurrent = buffer_get_float32(message, 100.0, &ind);
 			//data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
 			data.rpm 				= buffer_get_int32(message, &ind);
 			data.inpVoltage = buffer_get_float16(message, 10.0, &ind);
+			// data.ampHours = buffer_get_float32(message, 100.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
+			// data.ampHoursCharged = buffer_get_float32(message, 100.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
 			data.watt_hours = buffer_get_float32(message, 10000.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
 			data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);
 			//data.tachometer 		= buffer_get_int32(message, &ind);
 			//data.tachometerAbs 		= buffer_get_int32(message, &ind);
 			data.fault = message[ind];
+			//data.PIDpos = buffer_get_float32(message, 10000.0, &ind);
+			//data.tempMOS1 = buffer_get_float16(message, 10.0, &ind);
+			//data.tempMOS2 = buffer_get_float16(message, 10.0, &ind);
+			//data.tempMOS3 = buffer_get_float16(message, 10.0, &ind);
 			return true;
+
+			float tempMotor;
+			float avgMotorCurrent;
+			float avgInputCurrent;
+			float dutyCycleNow;
+			long rpm;
+			float inpVoltage;
+			float ampHours;
+			float ampHoursCharged;
+			float watt_hours;
+			float watt_hours_charged;
+			long tachometer;
+			long tachometerAbs;
+			uint8_t fault;
+			float throttlePPM;
 
 		case COMM_GET_DECODED_PPM:
 
