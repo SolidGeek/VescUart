@@ -26,6 +26,11 @@ class VescUart
 		float throttlePPM;
 	};
 
+	struct FWversionPackage {
+		uint8_t major;
+	  uint8_t minor;
+	};
+
 	/** Struct to hold the nunchuck values to send over UART */
 	struct nunchuckPackage {
 		int	valueX;
@@ -43,6 +48,9 @@ class VescUart
 
 		/** Variabel to hold measurements returned from VESC */
 		dataPackage data;
+
+		/** Variable to hold measurements returned from VESC */
+		FWversionPackage fw_version;
 
 		/** Variabel to hold nunchuck values */
 		nunchuckPackage nunchuck;
@@ -102,13 +110,24 @@ class VescUart
 
 		/**
 		 * @brief      Request PPM values to local VESC
+		 *
+		 * @return		 True if successfull otherwise false
 		 */
 		bool getLocalVescPPM(void);
 
 		/**
 		 * @brief      Request PPM values to Master VESC over CANbus
+		 * @param      id  - CAN ID of the master VESC
+		 * @return		 True if successfull otherwise false
 		 */
 		bool getMasterVescPPM(uint8_t id);
+
+		/**
+		 * @brief      Request version of VESC Firmware
+		 *
+		 * @return		 True if successfull otherwise false
+		 */
+		bool getFWversion(void);
 
 	private:
 

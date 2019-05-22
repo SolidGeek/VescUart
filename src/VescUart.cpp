@@ -185,19 +185,23 @@ bool VescUart::processReadPacket(uint8_t * message) {
 	message++; // Removes the packetId from the actual message (payload)
 
 	switch (packetId){
+		case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+
+			fw_version.major = message[ind++];
+			fw_version.minor = message[ind++];
+			return true;
+
 		case COMM_GET_VALUES_SETUP_SELECTIVE: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
 			ind = 4; // Skip the mask
 			data.tempMotor 		= buffer_get_float16(message, 10.0, &ind);
 			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
-			//ind += 8; // Skip the next 8 bytes
 			//data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
 			data.rpm 				= buffer_get_int32(message, &ind);
 			data.inpVoltage = buffer_get_float16(message, 10.0, &ind);
-			data.watt_hours = buffer_get_float32(message, 10000.0, &ind);
+			data.watt_hours = buffer_get_float32(message, 10000.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
 			data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);
-			//ind += 8; // Skip the next 8 bytes
 			//data.tachometer 		= buffer_get_int32(message, &ind);
 			//data.tachometerAbs 		= buffer_get_int32(message, &ind);
 			data.fault = message[ind];
@@ -272,6 +276,26 @@ bool VescUart::getMasterVescPPM(uint8_t id) {
 	uint8_t payload[256];
 
 	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getFWversion(void){
+
+	uint8_t command[1] = { COMM_FW_VERSION };
+	uint8_t payload[256];
+
+	packSendPayload(command, 1);
 	// delay(1); //needed, otherwise data is not read
 
 	int lenPayload = receiveUartMessage(payload);

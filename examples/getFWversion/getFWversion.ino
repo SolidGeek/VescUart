@@ -10,7 +10,6 @@
 
 /** Initiate VescUart class */
 VescUart UART;
-uint8_t masterVescCANID = 0;
 
 void setup() {
 
@@ -24,14 +23,17 @@ void setup() {
 
   /** Define which ports to use as UART */
   UART.setSerialPort(&Serial1);
+
 }
 
 void loop() {
 
   /** Call the function getVescValues() to acquire data from VESC */
-  if ( UART.getMasterVescPPM(masterVescCANID) ) {
-
-    Serial.println(UART.data.throttlePPM);
+  if ( UART.getFWversion()) {
+    Serial.print("FW v");
+    Serial.print(UART.fw_version.major);
+    Serial.print(".");
+    Serial.println(UART.fw_version.minor);
 
   }
   else
