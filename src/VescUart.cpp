@@ -176,73 +176,105 @@ int VescUart::packSendPayload(uint8_t * payload, int lenPay) {
 }
 
 
-bool VescUart::processReadPacket(uint8_t * message) {
+bool VescUart::processReadPacket(bool deviceType, uint8_t * message) {
 
 	COMM_PACKET_ID packetId;
+	COMM_PACKET_ID_DIEBIEMS packetIdDieBieMS;
+
 	int32_t ind = 0;
 
-	packetId = (COMM_PACKET_ID)message[0];
-	message++; // Removes the packetId from the actual message (payload)
+	if (!deviceType) { //device if VESC type
+		packetId = (COMM_PACKET_ID)message[0];
+		message++; // Removes the packetId from the actual message (payload)
 
-	switch (packetId){
-		case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+		switch (packetId){
+			case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
-			fw_version.major = message[ind++];
-			fw_version.minor = message[ind++];
-			return true;
+				fw_version.major = message[ind++];
+				fw_version.minor = message[ind++];
+				return true;
 
-		case COMM_GET_VALUES_SETUP_SELECTIVE: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+			case COMM_GET_VALUES_SETUP_SELECTIVE: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
-			ind = 4; // Skip the mask
-			//data.tempFET =					buffer_get_float16(message, 10.0, &ind);
-			data.tempMotor 		= 		buffer_get_float16(message, 10.0, &ind);
-			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
-			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
-			//data.avgIdCurrent = buffer_get_float32(message, 100.0, &ind);
-			//data.avgIqCurrent = buffer_get_float32(message, 100.0, &ind);
-			//data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
-			data.rpm 				= buffer_get_int32(message, &ind);
-			data.inpVoltage = buffer_get_float16(message, 10.0, &ind);
-			// data.ampHours = buffer_get_float32(message, 100.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
-			// data.ampHoursCharged = buffer_get_float32(message, 100.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
-			data.watt_hours = buffer_get_float32(message, 10000.0, &ind); //sum of all VESC if CAN Bus messages 1_2_3_4_5 are exchanged
-			data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);
-			//data.tachometer 		= buffer_get_int32(message, &ind);
-			//data.tachometerAbs 		= buffer_get_int32(message, &ind);
-			data.fault = message[ind];
-			//data.PIDpos = buffer_get_float32(message, 10000.0, &ind);
-			//data.tempMOS1 = buffer_get_float16(message, 10.0, &ind);
-			//data.tempMOS2 = buffer_get_float16(message, 10.0, &ind);
-			//data.tempMOS3 = buffer_get_float16(message, 10.0, &ind);
-			return true;
+				ind = 4; // Skip the mask
+				data.tempMotor 		= buffer_get_float16(message, 10.0, &ind);
+				data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
+				data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
+				//ind += 8; // Skip the next 8 bytes
+				//data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
+				data.rpm 				= buffer_get_int32(message, &ind);
+				data.inpVoltage = buffer_get_float16(message, 10.0, &ind);
+				data.watt_hours = buffer_get_float32(message, 10000.0, &ind);
+				data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);
+				//ind += 8; // Skip the next 8 bytes
+				//data.tachometer 		= buffer_get_int32(message, &ind);
+				//data.tachometerAbs 		= buffer_get_int32(message, &ind);
+				data.fault = message[ind];
+				return true;
 
-			float tempMotor;
-			float avgMotorCurrent;
-			float avgInputCurrent;
-			float dutyCycleNow;
-			long rpm;
-			float inpVoltage;
-			float ampHours;
-			float ampHoursCharged;
-			float watt_hours;
-			float watt_hours_charged;
-			long tachometer;
-			long tachometerAbs;
-			uint8_t fault;
-			float throttlePPM;
+			case COMM_GET_DECODED_PPM:
 
-		case COMM_GET_DECODED_PPM:
+				data.throttlePPM 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
+				//data.rawValuePPM 	= buffer_get_float32(message, 100.0, &ind);
+				return true;
+			break;
 
-			data.throttlePPM 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
-			//data.rawValuePPM 	= buffer_get_float32(message, 100.0, &ind);
-			return true;
-		break;
+			default:
+				return false;
+			break;
+		}
+	}
+	else { //device is DieBieMS
+		packetIdDieBieMS = (COMM_PACKET_ID_DIEBIEMS)message[0];
+		message++; // Removes the packetId from the actual message (payload)
 
-		default:
-			return false;
-		break;
+		switch (packetIdDieBieMS){
+
+			case DBMS_COMM_GET_VALUES: // Structure defined here: https://github.com/DieBieEngineering/DieBieMS-Firmware/blob/master/Modules/Src/modCommands.c
+
+				ind = 8; // Skip the first 2 float32 (pack voltage and current)
+				// DieBieMSdata.packVoltage = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.packCurrent = buffer_get_float32(message, 1000.0, &ind);
+				DieBieMSdata.soc = message[ind];
+				// DieBieMSdata.cellVoltageHigh = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageAverage = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageLow = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageMisMatch = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.loCurrentLoadVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.loCurrentLoadCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.hiCurrentLoadVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.hiCurrentLoadCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.auxVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.auxCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.tempBatteryHigh = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBatteryAverage = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBMSHigh = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBMSAverage = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.operationalState = message[ind];
+				// DieBieMSdata.chargeBalanceActive = message[ind++];
+				// DieBieMSdata.faultState = message[ind++];
+
+				return true;
+			break;
+
+			case DBMS_COMM_GET_BMS_CELLS: // Structure defined here: https://github.com/DieBieEngineering/DieBieMS-Firmware/blob/master/Modules/Src/modCommands.c
+
+				DieBieMScells.noOfCells = message[ind++];
+
+				for (uint8_t i=0; i<12;i++){
+					DieBieMScells.cellsVoltage[i] = buffer_get_float16(message, 1000.0, &ind);
+				}
+
+				return true;
+			break;
+
+			default:
+				return false;
+			break;
+		}
 	}
 }
+
 
 bool VescUart::getVescValues(void) {
 	uint8_t command[5];
@@ -260,7 +292,7 @@ bool VescUart::getVescValues(void) {
 	int lenPayload = receiveUartMessage(payload);
 
 	if (lenPayload > 0 && lenPayload < 55) {
-		bool read = processReadPacket(payload); //returns true if sucessful
+		bool read = processReadPacket(false, payload); //returns true if sucessful
 		return read;
 	}
 	else
@@ -281,7 +313,7 @@ bool VescUart::getLocalVescPPM(void) {
 	int lenPayload = receiveUartMessage(payload);
 
 	if (lenPayload > 0) { //&& lenPayload < 55
-		bool read = processReadPacket(payload); //returns true if sucessful
+		bool read = processReadPacket(false, payload); //returns true if sucessful
 		return read;
 	}
 	else
@@ -305,7 +337,7 @@ bool VescUart::getMasterVescPPM(uint8_t id) {
 	int lenPayload = receiveUartMessage(payload);
 
 	if (lenPayload > 0) { //&& lenPayload < 55
-		bool read = processReadPacket(payload); //returns true if sucessful
+		bool read = processReadPacket(false, payload); //returns true if sucessful
 		return read;
 	}
 	else
@@ -325,7 +357,53 @@ bool VescUart::getFWversion(void){
 	int lenPayload = receiveUartMessage(payload);
 
 	if (lenPayload > 0) { //&& lenPayload < 55
-		bool read = processReadPacket(payload); //returns true if sucessful
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getDieBieMSValues(uint8_t id) {
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN }; //VESC command
+	command[1] = id;
+	command[2] = { DBMS_COMM_GET_VALUES }; //DieBieMS command
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(true, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getDieBieMSCellsVoltage(uint8_t id) {
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN }; //VESC command
+	command[1] = id;
+	command[2] = { DBMS_COMM_GET_BMS_CELLS }; //DieBieMS command
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(true, payload); //returns true if sucessful
 		return read;
 	}
 	else
