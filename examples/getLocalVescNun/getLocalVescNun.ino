@@ -10,7 +10,6 @@
 
 /** Initiate VescUart class */
 VescUart UART;
-uint8_t masterVescCANID = 0;
 
 void setup() {
 
@@ -29,7 +28,7 @@ void setup() {
 void loop() {
 
   /** Call the function getVescValues() to acquire data from VESC */
-  if ( UART.getMasterVescPPM(masterVescCANID) ) {
+  if ( UART.getLocalVescNun() ) {
 
     Serial.println(UART.data.throttle);
 

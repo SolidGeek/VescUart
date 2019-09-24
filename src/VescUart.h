@@ -23,7 +23,7 @@ class VescUart
 		long tachometer;
 		long tachometerAbs;
 		uint8_t fault;
-		float throttlePPM;
+		float throttle;
 	};
 
 	/** Struct to store the telemetry data returned by the DieBieMS */
@@ -159,6 +159,20 @@ class VescUart
 		bool getMasterVescPPM(uint8_t id);
 
 		/**
+		 * @brief      Request PPM values to local VESC
+		 *
+		 * @return		 True if successfull otherwise false
+		 */
+		bool getLocalVescNun(void);
+
+		/**
+		 * @brief      Request PPM values to Master VESC over CANbus
+		 * @param      id  - CAN ID of the master VESC
+		 * @return		 True if successfull otherwise false
+		 */
+		bool getMasterVescNun(uint8_t id);
+
+		/**
 		 * @brief      Request version of VESC Firmware
 		 *
 		 * @return		 True if successfull otherwise false
@@ -171,7 +185,7 @@ class VescUart
 		 * @return     True if successfull otherwise false
 		 */
 		bool getDieBieMSValues(uint8_t id);
-		
+
 		/**
 		 * @brief      Sends a command to DieBieMS over CAN and stores the returned cells voltage
 		 * @param			id - CAN ID of DieBieMS (default is 10)

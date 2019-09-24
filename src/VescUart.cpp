@@ -214,8 +214,15 @@ bool VescUart::processReadPacket(bool deviceType, uint8_t * message) {
 
 			case COMM_GET_DECODED_PPM:
 
-				data.throttlePPM 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
+				data.throttle 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
 				//data.rawValuePPM 	= buffer_get_float32(message, 100.0, &ind);
+				return true;
+			break;
+
+			case COMM_GET_DECODED_CHUK:
+
+				data.throttle 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
+
 				return true;
 			break;
 
@@ -235,7 +242,8 @@ bool VescUart::processReadPacket(bool deviceType, uint8_t * message) {
 				ind = 8; // Skip the first 2 float32 (pack voltage and current)
 				// DieBieMSdata.packVoltage = buffer_get_float32(message, 1000.0, &ind);
 				// DieBieMSdata.packCurrent = buffer_get_float32(message, 1000.0, &ind);
-				DieBieMSdata.soc = message[ind];
+				DieBieMSdata.soc = message[ind++];
+				ind+=36;
 				// DieBieMSdata.cellVoltageHigh = buffer_get_float32(message, 1000.0, &ind);
 				// DieBieMSdata.cellVoltageAverage = buffer_get_float32(message, 1000.0, &ind);
 				// DieBieMSdata.cellVoltageLow = buffer_get_float32(message, 1000.0, &ind);
@@ -250,7 +258,7 @@ bool VescUart::processReadPacket(bool deviceType, uint8_t * message) {
 				// DieBieMSdata.tempBatteryAverage = buffer_get_float16(message, 10.0, &ind);
 				// DieBieMSdata.tempBMSHigh = buffer_get_float16(message, 10.0, &ind);
 				// DieBieMSdata.tempBMSAverage = buffer_get_float16(message, 10.0, &ind);
-				// DieBieMSdata.operationalState = message[ind];
+				DieBieMSdata.operationalState = message[ind++];
 				// DieBieMSdata.chargeBalanceActive = message[ind++];
 				// DieBieMSdata.faultState = message[ind++];
 
@@ -304,7 +312,6 @@ bool VescUart::getVescValues(void) {
 bool VescUart::getLocalVescPPM(void) {
 
 	uint8_t command[1] = { COMM_GET_DECODED_PPM };
-
 	uint8_t payload[256];
 
 	packSendPayload(command, 1);
@@ -328,6 +335,49 @@ bool VescUart::getMasterVescPPM(uint8_t id) {
 	command[0] = { COMM_FORWARD_CAN };
 	command[1] = id;
 	command[2] = { COMM_GET_DECODED_PPM };
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getLocalVescNun(void){
+	uint8_t command[1] = { COMM_GET_DECODED_CHUK };
+	uint8_t payload[256];
+
+	packSendPayload(command, 1);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+bool VescUart::getMasterVescNun(uint8_t id){
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN };
+	command[1] = id;
+	command[2] = { COMM_GET_DECODED_CHUK };
 
 	uint8_t payload[256];
 

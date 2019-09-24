@@ -29,7 +29,7 @@ void setup() {
 void loop() {
 
   /** Call the function getVescValues() to acquire data from VESC */
-  if ( UART.getMasterVescPPM(masterVescCANID) ) {
+  if ( UART.getMasterVescNun(masterVescCANID) ) {
 
     Serial.println(UART.data.throttle);
 

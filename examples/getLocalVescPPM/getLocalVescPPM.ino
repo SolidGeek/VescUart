@@ -14,10 +14,10 @@ VescUart UART;
 void setup() {
 
   /** Setup Serial port to display data */
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   /** Setup UART port (Serial1 on Atmega32u4) */
-  Serial1.begin(19200);
+  Serial1.begin(115200);
 
   while (!Serial) {;}
 
@@ -30,7 +30,7 @@ void loop() {
   /** Call the function getVescValues() to acquire data from VESC */
   if ( UART.getLocalVescPPM() ) {
 
-    Serial.println(UART.data.throttlePPM);
+    Serial.println(UART.data.throttle);
 
   }
   else
