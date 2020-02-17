@@ -21,47 +21,25 @@
 #include "packet.h"
 #include "crc.h"
 
-/**
- * The latest update aims at achieving optimal re-synchronization in the
- * case if lost data, at the cost of some performance.
- */
-
-// Defines
-#define BUFFER_LEN				(PACKET_MAX_PL_LEN + 8)
-
-// Private types
-typedef struct {
-	volatile unsigned short rx_timeout;
-	void(*send_func)(unsigned char *data, unsigned int len);
-	void(*process_func)(unsigned char *data, unsigned int len);
-	unsigned int rx_read_ptr;
-	unsigned int rx_write_ptr;
-	int bytes_left;
-	unsigned char rx_buffer[BUFFER_LEN];
-	unsigned char tx_buffer[BUFFER_LEN];
-} PACKET_STATE_t;
-
-// Private variables
-static PACKET_STATE_t m_handler_states[PACKET_HANDLERS];
-
 // Private functions
 static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
 		void(*process_func)(unsigned char *data, unsigned int len), int *bytes_left);
 
-void packet_init(void (*s_func)(unsigned char *data, unsigned int len),
+void Packet::packet_init(void (*s_func)(unsigned char *data, unsigned int len),
 		void (*p_func)(unsigned char *data, unsigned int len), int handler_num) {
 	memset(&m_handler_states[handler_num], 0, sizeof(PACKET_STATE_t));
 	m_handler_states[handler_num].send_func = s_func;
 	m_handler_states[handler_num].process_func = p_func;
 }
 
-void packet_reset(int handler_num) {
+void Packet::reset(int handler_num) {
 	m_handler_states[handler_num].rx_read_ptr = 0;
 	m_handler_states[handler_num].rx_write_ptr = 0;
 	m_handler_states[handler_num].bytes_left = 0;
 }
 
-void packet_send_packet(unsigned char *data, unsigned int len, int handler_num) {
+void Packet::send_packet(unsigned char *data, unsigned int len, int handler_num) {
+
 	if (len == 0 || len > PACKET_MAX_PL_LEN) {
 		return;
 	}
@@ -70,17 +48,17 @@ void packet_send_packet(unsigned char *data, unsigned int len, int handler_num) 
 	PACKET_STATE_t *handler = &m_handler_states[handler_num];
 
 	if (len <= 255) {
-		handler->tx_buffer[b_ind++] = 2;
-		handler->tx_buffer[b_ind++] = len;
+		this->tx_buffer[b_ind++] = 2;
+		this->tx_buffer[b_ind++] = len;
 	} else if (len <= 65535) {
 		handler->tx_buffer[b_ind++] = 3;
-		handler->tx_buffer[b_ind++] = len >> 8;
-		handler->tx_buffer[b_ind++] = len & 0xFF;
+		handler->tx_buffer[b_ind++] = len >> 8;  	// Bitshift 8 bit to the left (first 8 bit)
+		handler->tx_buffer[b_ind++] = len & 0xFF; 	// Bitwise AND with 0xFF (last 8 bit)
 	} else {
 		handler->tx_buffer[b_ind++] = 4;
-		handler->tx_buffer[b_ind++] = len >> 16;
-		handler->tx_buffer[b_ind++] = (len >> 8) & 0x0F;
-		handler->tx_buffer[b_ind++] = len & 0xFF;
+		handler->tx_buffer[b_ind++] = len >> 16; 			// Bitshift 16 bit to the left (first 8 bit)
+		handler->tx_buffer[b_ind++] = (len >> 8) & 0xFF; 	// Bitshift 8 bit to the left and bitwise AND with 0xFF (middle 8 bit)
+		handler->tx_buffer[b_ind++] = len & 0xFF; 			// Bitwise AND with 0xFF (last 8 bit)
 	}
 
 	memcpy(handler->tx_buffer + b_ind, data, len);

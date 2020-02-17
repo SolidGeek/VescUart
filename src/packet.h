@@ -1,7 +1,7 @@
 /*
-	Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2020 Emil Jacobsen 	solidgeek.dk
 
-	This file is part of the VESC firmware.
+	This file is inspired by the VESC software made by Benjamin Vedder (benjamin@vedder.se)
 
 	The VESC firmware is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,26 +17,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#ifndef PACKET_H_
-#define PACKET_H_
+#ifndef VESC_PACKET_H_
+#define VESC_PACKET_H_
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <Arduino.h>
 
 // Settings
-#ifndef PACKET_RX_TIMEOUT
-#define PACKET_RX_TIMEOUT		100
-#endif
 
-#ifndef PACKET_HANDLERS
-#define PACKET_HANDLERS			2
-#endif
+#define PACKET_RX_TIMEOUT 100
 
-#ifndef PACKET_MAX_PL_LEN
-#define PACKET_MAX_PL_LEN		512
-#endif
+#define PACKET_MAX_LEN 512
 
-
+#define BUFFER_LEN (PACKET_MAX_LEN + 8)
 
 class Packet
 {
@@ -56,28 +48,30 @@ public:
 	void reset( void );
 
 	/**
-		* @brief      Init the packet with functions for sending and processing data
-		* @param      s_func - Pointer to sending function 
-		* @param      p_func - Pointer to processing function 
+		* @brief      Add byte to the rx_buffer and process the data
+		* @param      rx_data - Byte to be added
 	*/
 	void process_byte( uint8_t rx_data );
+
 	void timerfunc( void );
-	void send_packet( unsigned char *data, unsigned int len );
+
+	void send_packet( uint8_t *data, uint16_t len );
+
+	uint8_t decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left );
 
 
 private:
+	
+	void (*send_func)(uint8_t *data, uint16_t len);
+	void (*process_func)(uint8_t *data, uint16_t len);
 
-	// Private types
-	typedef struct {
-		volatile unsigned short rx_timeout;
-		void(*send_func)(unsigned char *data, unsigned int len);
-		void(*process_func)(unsigned char *data, unsigned int len);
-		unsigned int rx_read_ptr;
-		unsigned int rx_write_ptr;
-		int bytes_left;
-		unsigned char rx_buffer[BUFFER_LEN];
-		unsigned char tx_buffer[BUFFER_LEN];
-	} PACKET_STATE_t;
+	uint16_t rx_read_ptr;
+	uint16_t rx_write_ptr;
+	uint16_t bytes_left;
+
+	uint8_t rx_buffer[BUFFER_LEN];
+	uint8_t tx_buffer[BUFFER_LEN];
 
 }
-#endif /* PACKET_H_ */
+
+#endif
