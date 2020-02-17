@@ -22,12 +22,8 @@
 
 #include <Arduino.h>
 
-// Settings
-
-#define PACKET_RX_TIMEOUT 100
 
 #define PACKET_MAX_LEN 512
-
 #define BUFFER_LEN (PACKET_MAX_LEN + 8)
 
 class Packet

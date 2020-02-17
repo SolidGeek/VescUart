@@ -102,6 +102,8 @@ class VescUart
 
 	private: 
 
+		Packet handler = NULL;
+
 		/** Variable to hold the reference to the Serial object to use for UART */
 		Stream* serialPort = NULL;
 

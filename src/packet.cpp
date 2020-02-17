@@ -17,117 +17,84 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#include <string.h>
 #include "packet.h"
 #include "crc.h"
 
-// Private functions
-static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
-		void(*process_func)(unsigned char *data, unsigned int len), int *bytes_left);
+void Packet::init(void(*s_func)(uint8_t *data, uint16_t len), void(*p_func)(uint8_t *data, uint16_t len){
 
-void Packet::packet_init(void (*s_func)(unsigned char *data, unsigned int len),
-		void (*p_func)(unsigned char *data, unsigned int len), int handler_num) {
-	memset(&m_handler_states[handler_num], 0, sizeof(PACKET_STATE_t));
-	m_handler_states[handler_num].send_func = s_func;
-	m_handler_states[handler_num].process_func = p_func;
+	this->send_func = s_func;
+	this->process_func = p_func;
+
 }
 
 void Packet::reset(int handler_num) {
-	m_handler_states[handler_num].rx_read_ptr = 0;
-	m_handler_states[handler_num].rx_write_ptr = 0;
-	m_handler_states[handler_num].bytes_left = 0;
+	this->rx_read_ptr = 0;
+	this->rx_write_ptr = 0;
+	this->bytes_left = 0;
 }
 
-void Packet::send_packet(unsigned char *data, unsigned int len, int handler_num) {
+void Packet::send_packet( uint8_t *data, uint16_t len ){
 
 	if (len == 0 || len > PACKET_MAX_PL_LEN) {
 		return;
 	}
 
-	int b_ind = 0;
-	PACKET_STATE_t *handler = &m_handler_states[handler_num];
+	int16_t index = 0;
 
 	if (len <= 255) {
-		this->tx_buffer[b_ind++] = 2;
-		this->tx_buffer[b_ind++] = len;
+		this->tx_buffer[index++] = 2;
+		this->tx_buffer[index++] = len;
 	} else if (len <= 65535) {
-		handler->tx_buffer[b_ind++] = 3;
-		handler->tx_buffer[b_ind++] = len >> 8;  	// Bitshift 8 bit to the left (first 8 bit)
-		handler->tx_buffer[b_ind++] = len & 0xFF; 	// Bitwise AND with 0xFF (last 8 bit)
-	} else {
-		handler->tx_buffer[b_ind++] = 4;
-		handler->tx_buffer[b_ind++] = len >> 16; 			// Bitshift 16 bit to the left (first 8 bit)
-		handler->tx_buffer[b_ind++] = (len >> 8) & 0xFF; 	// Bitshift 8 bit to the left and bitwise AND with 0xFF (middle 8 bit)
-		handler->tx_buffer[b_ind++] = len & 0xFF; 			// Bitwise AND with 0xFF (last 8 bit)
-	}
+		this->tx_buffer[index++] = 3;
+		this->tx_buffer[index++] = len >> 8;  	// Bitshift 8 bit to the left (first 8 bit)
+		this->tx_buffer[index++] = len & 0xFF; 	// Bitwise AND with 0xFF (last 8 bit)
+	} 
 
-	memcpy(handler->tx_buffer + b_ind, data, len);
-	b_ind += len;
+	memcpy(this->tx_buffer + index, data, len);
+	index += len;
 
-	unsigned short crc = crc16(data, len);
-	handler->tx_buffer[b_ind++] = (uint8_t)(crc >> 8);
-	handler->tx_buffer[b_ind++] = (uint8_t)(crc & 0xFF);
-	handler->tx_buffer[b_ind++] = 3;
+	uint16_t crc = (uint16_t)crc16(data, len);
+	this->tx_buffer[index++] = (uint8_t)(crc >> 8);
+	this->tx_buffer[index++] = (uint8_t)(crc & 0xFF);
+	this->tx_buffer[index++] = 3;
 
-	if (handler->send_func) {
-		handler->send_func(handler->tx_buffer, b_ind);
+	if (this->send_func) {
+		this->send_func(this->tx_buffer, index);
 	}
 }
 
-/**
- * Call this function every millisecond. This is not strictly necessary
- * if the timeout is unimportant.
- */
-void packet_timerfunc(void) {
-	for (int i = 0;i < PACKET_HANDLERS;i++) {
-		if (m_handler_states[i].rx_timeout) {
-			m_handler_states[i].rx_timeout--;
-		} else {
-			packet_reset(i);
-		}
-	}
-}
+void Packet::process_byte(uint8_t rx_data, int handler_num) {
 
-void packet_process_byte(uint8_t rx_data, int handler_num) {
-	PACKET_STATE_t *handler = &m_handler_states[handler_num];
-
-	handler->rx_timeout = PACKET_RX_TIMEOUT;
-
-	unsigned int data_len = handler->rx_write_ptr - handler->rx_read_ptr;
+	uint16_t data_len = this->rx_write_ptr - this->rx_read_ptr;
 
 	// Out of space (should not happen)
 	if (data_len >= BUFFER_LEN) {
-		handler->rx_write_ptr = 0;
-		handler->rx_read_ptr = 0;
-		handler->bytes_left = 0;
-		handler->rx_buffer[handler->rx_write_ptr++] = rx_data;
+		this->rx_write_ptr = 0;
+		this->rx_read_ptr = 0;
+		this->bytes_left = 0;
+		this->rx_buffer[this->rx_write_ptr++] = rx_data;
 		return;
 	}
 
-	// Everything has to be aligned, so shift buffer if we are out of space.
-	// (as opposed to using a circular buffer)
-	if (handler->rx_write_ptr >= BUFFER_LEN) {
-		memmove(handler->rx_buffer,
-				handler->rx_buffer + handler->rx_read_ptr,
-				data_len);
+	// Everything has to be aligned, so shift buffer if we are out of space (as opposed to using a circular buffer)
+	if (this->rx_write_ptr >= BUFFER_LEN) {
+		memmove(this->rx_buffer, this->rx_buffer + this->rx_read_ptr, data_len);
 
-		handler->rx_read_ptr = 0;
-		handler->rx_write_ptr = data_len;
+		this->rx_read_ptr = 0;
+		this->rx_write_ptr = data_len;
 	}
 
-	handler->rx_buffer[handler->rx_write_ptr++] = rx_data;
+	this->rx_buffer[this->rx_write_ptr++] = rx_data;
 	data_len++;
 
-	if (handler->bytes_left > 1) {
-		handler->bytes_left--;
+	if (this->bytes_left > 1) {
+		this->bytes_left--;
 		return;
 	}
 
-	// Try decoding the packet at various offsets until it succeeds, or
-	// until we run out of data.
-	for (;;) {
-		int res = try_decode_packet(handler->rx_buffer + handler->rx_read_ptr,
-				data_len, handler->process_func, &handler->bytes_left);
+	// Try decoding the packet at various offsets until it succeeds, or until we run out of data.
+	while (true) {
+		int16_t res = this->decode_packet(this->rx_buffer + this->rx_read_ptr, data_len, this->process_func, &this->bytes_left);
 
 		// More data is needed
 		if (res == -2) {
@@ -136,18 +103,18 @@ void packet_process_byte(uint8_t rx_data, int handler_num) {
 
 		if (res > 0) {
 			data_len -= res;
-			handler->rx_read_ptr += res;
+			this->rx_read_ptr += res;
 		} else if (res == -1) {
 			// Something went wrong. Move pointer forward and try again.
-			handler->rx_read_ptr++;
+			this->rx_read_ptr++;
 			data_len--;
 		}
 	}
 
 	// Nothing left, move pointers to avoid memmove
 	if (data_len == 0) {
-		handler->rx_read_ptr = 0;
-		handler->rx_write_ptr = 0;
+		this->rx_read_ptr = 0;
+		this->rx_write_ptr = 0;
 	}
 }
 
@@ -172,8 +139,14 @@ void packet_process_byte(uint8_t rx_data, int handler_num) {
  * -1: Invalid structure
  * -2: OK so far, but not enough data
  */
-static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
-		void(*process_func)(unsigned char *data, unsigned int len), int *bytes_left) {
+
+int8_t Packet:decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left ){}
+	
+	bool is_len_8b = buffer[0] == 2;
+	bool is_len_16b = buffer[0] == 3;
+
+	uint16_t data_start = buffer[0];
+
 	*bytes_left = 0;
 
 	if (in_len == 0) {
@@ -181,23 +154,8 @@ static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
 		return -2;
 	}
 
-	bool is_len_8b = buffer[0] == 2;
-	unsigned int data_start = buffer[0];
-
-#if PACKET_MAX_PL_LEN > 255
-	bool is_len_16b = buffer[0] == 3;
-#else
-#define is_len_16b false
-#endif
-
-#if PACKET_MAX_PL_LEN > 65535
-	bool is_len_24b = buffer[0] == 4;
-#else
-#define is_len_24b false
-#endif
-
 	// No valid start byte
-	if (!is_len_8b && !is_len_16b && !is_len_24b) {
+	if (!is_len_8b && !is_len_16b) {
 		return -1;
 	}
 
@@ -207,31 +165,21 @@ static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
 		return -2;
 	}
 
-	unsigned int len = 0;
+	// Get length
+	uint16_t len = 0;
 
 	if (is_len_8b) {
-		len = (unsigned int)buffer[1];
+		len = (uint16_t)buffer[1];
 
 		// No support for zero length packets
-		if (len < 1) {
+		if (len < 1) 
 			return -1;
-		}
 	} else if (is_len_16b) {
-		len = (unsigned int)buffer[1] << 8 | (unsigned int)buffer[2];
+		len = (uint16_t)buffer[1] << 8 | (uint16_t)buffer[2];
 
 		// A shorter packet should use less length bytes
-		if (len < 255) {
+		if (len < 255)
 			return -1;
-		}
-	} else if (is_len_24b) {
-		len = (unsigned int)buffer[1] << 16 |
-				(unsigned int)buffer[2] << 8 |
-				(unsigned int)buffer[3];
-
-		// A shorter packet should use less length bytes
-		if (len < 65535) {
-			return -1;
-		}
 	}
 
 	// Too long packet
@@ -250,15 +198,15 @@ static int try_decode_packet(unsigned char *buffer, unsigned int in_len,
 		return -1;
 	}
 
-	unsigned short crc_calc = crc16(buffer + data_start, len);
-	unsigned short crc_rx = (unsigned short)buffer[data_start + len] << 8
-							| (unsigned short)buffer[data_start + len + 1];
+	uint16_t crc_calc = (uint16_t)crc16(buffer + data_start, len);
+	uint16_t crc_rx = (uint16_t)buffer[data_start + len] << 8 | (uint16_t)buffer[data_start + len + 1];
 
 	if (crc_calc == crc_rx) {
 		if (process_func) {
 			process_func(buffer + data_start, len);
 		}
 
+		// Return the length 
 		return len + data_start + 3;
 	} else {
 		return -1;
