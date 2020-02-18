@@ -243,13 +243,10 @@ void VescUart::setRemoteData( uint8_t value, bool cruise, bool reverse ) {
 	buffer_append_bool(payload, cruise, &ind);
 	buffer_append_bool(payload, reverse, &ind);
 	
-	// Acceleration Data. Not used, Int16 (2 byte)
-	payload[ind++] = 0;
-	payload[ind++] = 0;
-	payload[ind++] = 0;
-	payload[ind++] = 0;
-	payload[ind++] = 0;
-	payload[ind++] = 0;
+	// Acceleration Data. Not used, 3 * int16 (2 byte)
+	for (size_t i = 0; i < 6; i++){
+		payload[ind++] = 0;
+	}
 
 	this->packet.send(payload, sizeof(payload) );
 }
