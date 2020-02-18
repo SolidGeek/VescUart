@@ -1,15 +1,16 @@
+#include <stdint.h>
 #include "VescUart.h"
+#include "packet.h"
+
 
 VescUart::VescUart(void){
-	nunchuck.valueX         = 127;
-	nunchuck.valueY         = 127;
-	nunchuck.lowerButton  	= false;
-	nunchuck.upperButton  	= false;
+
 }
 
 void VescUart::setSerialPort(Stream* port)
 {
 	serialPort = port;
+	this->packet.init( this->serialPort );
 }
 
 void VescUart::setDebugPort(Stream* port)
@@ -210,10 +211,12 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 bool VescUart::getVescValues(void) {
 
-	uint8_t command[1] = { COMM_GET_VALUES };
+	uint8_t data[1] = { COMM_GET_VALUES };
 	uint8_t payload[256];
 
-	packSendPayload(command, 1);
+	this->packet.send(data, sizeof(data));
+
+	// packSendPayload(command, 1);
 	// delay(1); //needed, otherwise data is not read
 
 	int lenPayload = receiveUartMessage(payload);

@@ -17,25 +17,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
+#include <Arduino.h>
+#include <stdint.h>
 #include "packet.h"
 #include "crc.h"
 
-void Packet::init(void(*s_func)(uint8_t *data, uint16_t len), void(*p_func)(uint8_t *data, uint16_t len){
+void Packet::init( Stream * port ){
 
-	this->send_func = s_func;
-	this->process_func = p_func;
+	this->serialPort = port;
 
 }
 
-void Packet::reset(int handler_num) {
+void Packet::reset( void ) {
 	this->rx_read_ptr = 0;
 	this->rx_write_ptr = 0;
 	this->bytes_left = 0;
 }
 
-void Packet::send_packet( uint8_t *data, uint16_t len ){
+void Packet::send( uint8_t *data, uint16_t len ){
 
-	if (len == 0 || len > PACKET_MAX_PL_LEN) {
+	if (len == 0 || len > PACKET_MAX_LEN) {
 		return;
 	}
 
@@ -50,6 +51,7 @@ void Packet::send_packet( uint8_t *data, uint16_t len ){
 		this->tx_buffer[index++] = len & 0xFF; 	// Bitwise AND with 0xFF (last 8 bit)
 	} 
 
+
 	memcpy(this->tx_buffer + index, data, len);
 	index += len;
 
@@ -58,12 +60,13 @@ void Packet::send_packet( uint8_t *data, uint16_t len ){
 	this->tx_buffer[index++] = (uint8_t)(crc & 0xFF);
 	this->tx_buffer[index++] = 3;
 
-	if (this->send_func) {
-		this->send_func(this->tx_buffer, index);
+
+	if (this->serialPort) {
+		this->serialPort->write(this->tx_buffer, index);
 	}
 }
 
-void Packet::process_byte(uint8_t rx_data, int handler_num) {
+void Packet::process_byte( uint8_t rx_data ) {
 
 	uint16_t data_len = this->rx_write_ptr - this->rx_read_ptr;
 
@@ -94,7 +97,7 @@ void Packet::process_byte(uint8_t rx_data, int handler_num) {
 
 	// Try decoding the packet at various offsets until it succeeds, or until we run out of data.
 	while (true) {
-		int16_t res = this->decode_packet(this->rx_buffer + this->rx_read_ptr, data_len, this->process_func, &this->bytes_left);
+		int16_t res = this->decode_packet(this->rx_buffer + this->rx_read_ptr, data_len, &this->bytes_left);
 
 		// More data is needed
 		if (res == -2) {
@@ -127,10 +130,6 @@ void Packet::process_byte(uint8_t rx_data, int handler_num) {
  * @param in_len
  * The length of the buffer
  *
- * @param process_func
- * Call this function with the decoded packet on success. Set to null
- * to disable.
- *
  * @param bytes_left
  * This many additional bytes are required to tell more about the packet.
  *
@@ -140,7 +139,7 @@ void Packet::process_byte(uint8_t rx_data, int handler_num) {
  * -2: OK so far, but not enough data
  */
 
-int8_t Packet:decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left ){}
+int8_t Packet::decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left ){
 	
 	bool is_len_8b = buffer[0] == 2;
 	bool is_len_16b = buffer[0] == 3;
@@ -183,7 +182,7 @@ int8_t Packet:decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_l
 	}
 
 	// Too long packet
-	if (len > PACKET_MAX_PL_LEN) {
+	if (len > PACKET_MAX_LEN) {
 		return -1;
 	}
 
@@ -202,9 +201,11 @@ int8_t Packet:decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_l
 	uint16_t crc_rx = (uint16_t)buffer[data_start + len] << 8 | (uint16_t)buffer[data_start + len + 1];
 
 	if (crc_calc == crc_rx) {
-		if (process_func) {
+		/* if (process_func) {
 			process_func(buffer + data_start, len);
-		}
+		}*/
+
+		// Return buffered data in some way
 
 		// Return the length 
 		return len + data_start + 3;

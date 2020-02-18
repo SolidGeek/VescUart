@@ -21,7 +21,7 @@
 #define VESC_PACKET_H_
 
 #include <Arduino.h>
-
+#include <stdint.h>
 
 #define PACKET_MAX_LEN 512
 #define BUFFER_LEN (PACKET_MAX_LEN + 8)
@@ -33,10 +33,9 @@ public:
 
 	/**
 		* @brief      Init the packet with functions for sending and processing data
-		* @param      s_func - Pointer to sending function 
-		* @param      p_func - Pointer to processing function 
+		* @param      port - Pointer to serial communication object 
 	*/
-	void init( void(*s_func)(uint8_t *data, uint16_t len), void(*p_func)(uint8_t *data, uint16_t len) );
+	void init( Stream * port );
 
 	/**
 		* @brief      Reset the package object
@@ -51,15 +50,14 @@ public:
 
 	void timerfunc( void );
 
-	void send_packet( uint8_t *data, uint16_t len );
+	void send( uint8_t *data, uint16_t len );
 
-	uint8_t decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left );
+	int8_t decode_packet( uint8_t *buffer, uint16_t in_len, uint16_t *bytes_left );
 
 
 private:
 	
-	void (*send_func)(uint8_t *data, uint16_t len);
-	void (*process_func)(uint8_t *data, uint16_t len);
+	Stream * serialPort = NULL;
 
 	uint16_t rx_read_ptr;
 	uint16_t rx_write_ptr;
@@ -68,6 +66,6 @@ private:
 	uint8_t rx_buffer[BUFFER_LEN];
 	uint8_t tx_buffer[BUFFER_LEN];
 
-}
+};
 
 #endif

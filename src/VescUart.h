@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "datatypes.h"
 #include "buffer.h"
+#include "packet.h"
 #include "crc.h"
 
 class VescUart
@@ -102,7 +103,7 @@ class VescUart
 
 	private: 
 
-		Packet handler = NULL;
+		Packet packet;
 
 		/** Variable to hold the reference to the Serial object to use for UART */
 		Stream* serialPort = NULL;
@@ -110,7 +111,7 @@ class VescUart
 		/** Variable to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */
 		Stream* debugPort = NULL;
-
+		
 		/**
 		 * @brief      Packs the payload and sends it over Serial
 		 *
