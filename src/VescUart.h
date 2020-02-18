@@ -68,9 +68,9 @@ class VescUart
 		bool getVescValues(void);
 
 		/**
-		 * @brief      Sends values for joystick and buttons to the nunchuck app
+		 * @brief      Sends values for joystick and buttons to the vesc app
 		 */
-		void setNunchuckValues(void);
+		void setRemoteData(uint8_t value, bool cruise, bool reverse);
 
 		/**
 		 * @brief      Set the current to drive the motor
@@ -111,7 +111,7 @@ class VescUart
 		/** Variable to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */
 		Stream* debugPort = NULL;
-		
+
 		/**
 		 * @brief      Packs the payload and sends it over Serial
 		 *

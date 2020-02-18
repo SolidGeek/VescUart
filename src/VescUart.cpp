@@ -231,15 +231,17 @@ bool VescUart::getVescValues(void) {
 	}
 }
 
-void VescUart::setNunchuckValues() {
+/* The VESC remote app still uses the old nunchuck_app, so do we */
+void VescUart::setRemoteData( uint8_t value, bool cruise, bool reverse ) {
+
 	int32_t ind = 0;
 	uint8_t payload[11];
 
 	payload[ind++] = COMM_SET_CHUCK_DATA;
-	payload[ind++] = nunchuck.valueX;
-	payload[ind++] = nunchuck.valueY;
-	buffer_append_bool(payload, nunchuck.lowerButton, &ind);
-	buffer_append_bool(payload, nunchuck.upperButton, &ind);
+	payload[ind++] = value;
+	payload[ind++] = 128; // Middle value
+	buffer_append_bool(payload, cruise, &ind);
+	buffer_append_bool(payload, reverse, &ind);
 	
 	// Acceleration Data. Not used, Int16 (2 byte)
 	payload[ind++] = 0;
@@ -249,13 +251,7 @@ void VescUart::setNunchuckValues() {
 	payload[ind++] = 0;
 	payload[ind++] = 0;
 
-	if(debugPort != NULL){
-		debugPort->println("Data reached at setNunchuckValues:");
-		debugPort->print("valueX = "); debugPort->print(nunchuck.valueX); debugPort->print(" valueY = "); debugPort->println(nunchuck.valueY);
-		debugPort->print("LowerButton = "); debugPort->print(nunchuck.lowerButton); debugPort->print(" UpperButton = "); debugPort->println(nunchuck.upperButton);
-	}
-
-	packSendPayload(payload, 11);
+	this->packet.send(payload, sizeof(payload) );
 }
 
 void VescUart::setCurrent(float current) {
