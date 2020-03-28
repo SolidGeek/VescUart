@@ -24,6 +24,8 @@ class VescUart
 		float tempMosfet;
 		float tempMotor;
 		uint8_t error; 
+		float pidPos;
+		uint8_t id; 
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
