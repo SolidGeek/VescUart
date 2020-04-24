@@ -46,7 +46,7 @@ class VescUart
 		 * @brief      Set the serial port for uart communication
 		 * @param      port  - Reference to Serial port (pointer) 
 		 */
-		void setSerialPort(HardwareSerial* port);
+		void setSerialPort(Stream* port);
 
 		/**
 		 * @brief      Set the serial port for debugging
@@ -98,7 +98,7 @@ class VescUart
 	private: 
 
 		/** Variabel to hold the reference to the Serial object to use for UART */
-		HardwareSerial* serialPort = NULL;
+		Stream* serialPort = NULL;
 
 		/** Variabel to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */
