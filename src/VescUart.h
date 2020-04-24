@@ -10,9 +10,12 @@ class VescUart
 {
 	/** Struct to store the telemetry data returned by the VESC */
 	struct dataPackage {
+		float tempFET;
 		float tempMotor;
 		float avgMotorCurrent;
 		float avgInputCurrent;
+		float avgIqCurent;
+		float avgIdCurent;
 		float dutyCycleNow;
 		long rpm;
 		float inpVoltage;
@@ -105,10 +108,23 @@ class VescUart
 
 		/**
 		 * @brief      Sends a command to VESC and stores the returned data
-		 *
 		 * @return     True if successfull otherwise false
 		 */
 		bool getVescValues(void);
+
+		/**
+		 * @brief      Sends a command to VESC and stores the returned data
+		 * @param			mask : select which values are sent back by the VESC
+		 * @return     True if successfull otherwise false
+		 */
+		bool getVescValuesSelective(uint32_t mask);
+
+		/**
+		 * @brief      Sends a command to VESC and stores the returned data
+		 * @param			mask : select which values are sent back by the VESC
+		 * @return     True if successfull otherwise false
+		 */
+		bool getVescValuesSetupSelective(uint32_t mask);
 
 		/**
 		 * @brief      Sends values for joystick and buttons to the nunchuck app
@@ -192,6 +208,13 @@ class VescUart
 		 * @return     True if successfull otherwise false
 		 */
 		bool getDieBieMSCellsVoltage(uint8_t id);
+
+		/**
+		 * @brief      Set a profile
+		 * @param
+
+		 */
+		void setLocalProfile(bool store, bool forward_can, bool ack, bool divide_by_controllers, float current_min_rel, float current_max_rel, float speed_max_reverse, float speed_max, float duty_min, float duty_max, float watt_min, float watt_max);
 
 	private:
 
