@@ -1,3 +1,5 @@
+//Compatible with VESC FW3.49
+
 #include "VescUart.h"
 #include <HardwareSerial.h>
 
@@ -28,7 +30,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 	bool messageRead = false;
 	uint8_t messageReceived[256];
 	uint16_t lenPayload = 0;
-	
+
 	uint32_t timeout = millis() + 100; // Defining the timestamp for timeout (100ms before timeout)
 
 	while ( millis() < timeout && messageRead == false) {
@@ -78,7 +80,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 	if(messageRead == false && debugPort != NULL ) {
 		debugPort->println("Timeout");
 	}
-	
+
 	bool unpacked = false;
 
 	if (messageRead) {
@@ -87,7 +89,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 
 	if (unpacked) {
 		// Message was read
-		return lenPayload; 
+		return lenPayload;
 	}
 	else {
 		// No Message Read
@@ -118,10 +120,10 @@ bool VescUart::unpackPayload(uint8_t * message, int lenMes, uint8_t * payload) {
 	if( debugPort != NULL ){
 		debugPort->print("SRC calc: "); debugPort->println(crcPayload);
 	}
-	
+
 	if (crcPayload == crcMessage) {
 		if( debugPort != NULL ) {
-			debugPort->print("Received: "); 
+			debugPort->print("Received: ");
 			serialPrint(message, lenMes); debugPort->println();
 
 			debugPort->print("Payload :      ");
@@ -129,11 +131,11 @@ bool VescUart::unpackPayload(uint8_t * message, int lenMes, uint8_t * payload) {
 		}
 
 		return true;
-	}else{
+	}
+	else {
 		return false;
 	}
 }
-
 
 int VescUart::packSendPayload(uint8_t * payload, int lenPay) {
 
@@ -172,43 +174,154 @@ int VescUart::packSendPayload(uint8_t * payload, int lenPay) {
 	return count;
 }
 
-
-bool VescUart::processReadPacket(uint8_t * message) {
+bool VescUart::processReadPacket(bool deviceType, uint8_t * message) {
 
 	COMM_PACKET_ID packetId;
+	COMM_PACKET_ID_DIEBIEMS packetIdDieBieMS;
+
 	int32_t ind = 0;
 
-	packetId = (COMM_PACKET_ID)message[0];
-	message++; // Removes the packetId from the actual message (payload)
+	if (!deviceType) { //device if VESC type
+		packetId = (COMM_PACKET_ID)message[0];
+		message++; // Removes the packetId from the actual message (payload)
 
-	switch (packetId){
-		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+		switch (packetId){
+			case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
-			ind = 4; // Skip the first 4 bytes 
-			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
-			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
-			ind += 8; // Skip the next 8 bytes
-			data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);
-			data.rpm 				= buffer_get_int32(message, &ind);
-			data.inpVoltage 		= buffer_get_float16(message, 10.0, &ind);
-			data.ampHours 			= buffer_get_float32(message, 10000.0, &ind);
-			data.ampHoursCharged 	= buffer_get_float32(message, 10000.0, &ind);
-			ind += 8; // Skip the next 8 bytes 
-			data.tachometer 		= buffer_get_int32(message, &ind);
-			data.tachometerAbs 		= buffer_get_int32(message, &ind);
-			return true;
+				fw_version.major = message[ind++];
+				fw_version.minor = message[ind++];
+				return true;
 
-		break;
+			case COMM_GET_VALUES:
+			case COMM_GET_VALUES_SELECTIVE: { // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+				uint32_t mask = 0xFFFFFFFF;
 
-		default:
-			return false;
-		break;
+				if (packetId == COMM_GET_VALUES_SELECTIVE){
+					mask = buffer_get_uint32(message, &ind);
+				}
+
+				if (mask & ((uint32_t)1 << 0)) {data.tempFET 		= buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 1)) {data.tempMotor 		= buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 2)) {data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 3)) {data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 4)) {data.avgIdCurent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 5)) {data.avgIqCurent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 6)) {data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);}
+				if (mask & ((uint32_t)1 << 7)) {data.rpm 				= buffer_get_int32(message, &ind);}
+				if (mask & ((uint32_t)1 << 8)) {data.inpVoltage = buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 9)) {data.ampHours = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 10)) {data.ampHoursCharged = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 11)) {data.watt_hours = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 12)) {data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 13)) {data.tachometer 		= buffer_get_int32(message, &ind);}
+				if (mask & ((uint32_t)1 << 14)) {data.tachometerAbs 		= buffer_get_int32(message, &ind);}
+				if (mask & ((uint32_t)1 << 15)) {data.fault = message[ind]; }
+				//Others values are ignored. You can add them here accordingly to commands.c in VESC Firmware. Please add those variables in "struct dataPackage" in VescUart.h file.
+
+				return true;
+			}
+
+			case COMM_GET_VALUES_SETUP_SELECTIVE: { // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
+				uint32_t mask = 0;
+				mask += ind++ << 24;
+				mask += ind++ << 16;
+				mask += ind++ << 8;
+				mask += ind++;
+
+				if (mask & ((uint32_t)1 << 0)) {data.tempFET 		= buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 1)) {data.tempMotor 		= buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 2)) {data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 3)) {data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);}
+				if (mask & ((uint32_t)1 << 4)) {data.dutyCycleNow 		= buffer_get_float16(message, 1000.0, &ind);}
+				if (mask & ((uint32_t)1 << 5)) {data.rpm 				= buffer_get_int32(message, &ind);}
+				if (mask & ((uint32_t)1 << 6)) { /* speed */};
+				if (mask & ((uint32_t)1 << 7)) {data.inpVoltage = buffer_get_float16(message, 10.0, &ind);}
+				if (mask & ((uint32_t)1 << 8)) { /* batt level */}
+				if (mask & ((uint32_t)1 << 9)) {data.ampHours = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 10)) {data.ampHoursCharged = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 11)) {data.watt_hours = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 12)) {data.watt_hours_charged = buffer_get_float32(message, 10000.0, &ind);}
+				if (mask & ((uint32_t)1 << 13)) {/* distance */}
+				if (mask & ((uint32_t)1 << 14)) {/* distance absolute */}
+				if (mask & ((uint32_t)1 << 15)) {/* PID pos */}
+				if (mask & ((uint32_t)1 << 16)) {data.fault = message[ind]; }
+				//Others values are ignored. You can add them here accordingly to commands.c in VESC Firmware. Please add those variables in "struct dataPackage" in VescUart.h file.
+
+				return true;
+			}
+
+			case COMM_GET_DECODED_PPM:
+
+				data.throttle 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
+				//data.rawValuePPM 	= buffer_get_float32(message, 100.0, &ind);
+				return true;
+			break;
+
+			case COMM_GET_DECODED_CHUK:
+
+				data.throttle 	= (float)(buffer_get_int32(message, &ind) / 10000.0);
+
+				return true;
+			break;
+
+			default:
+				return false;
+			break;
+		}
+	}
+	else { //device is DieBieMS
+		packetIdDieBieMS = (COMM_PACKET_ID_DIEBIEMS)message[0];
+		message++; // Removes the packetId from the actual message (payload)
+
+		switch (packetIdDieBieMS){
+
+			case DBMS_COMM_GET_VALUES: // Structure defined here: https://github.com/DieBieEngineering/DieBieMS-Firmware/blob/master/Modules/Src/modCommands.c
+
+				ind = 45;
+				// DieBieMSdata.packVoltage = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.packCurrent = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageHigh = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageAverage = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageLow = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.cellVoltageMisMatch = buffer_get_float32(message, 1000.0, &ind);
+				// DieBieMSdata.loCurrentLoadVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.loCurrentLoadCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.hiCurrentLoadVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.hiCurrentLoadCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.auxVoltage = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.auxCurrent = buffer_get_float16(message, 100.0, &ind);
+				// DieBieMSdata.tempBatteryHigh = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBatteryAverage = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBMSHigh = buffer_get_float16(message, 10.0, &ind);
+				// DieBieMSdata.tempBMSAverage = buffer_get_float16(message, 10.0, &ind);
+				DieBieMSdata.operationalState = message[ind++];
+				// DieBieMSdata.chargeBalanceActive = message[ind++];
+				// DieBieMSdata.faultState = message[ind++];
+
+				return true;
+			break;
+
+			case DBMS_COMM_GET_BMS_CELLS: // Structure defined here: https://github.com/DieBieEngineering/DieBieMS-Firmware/blob/master/Modules/Src/modCommands.c
+
+				DieBieMScells.noOfCells = message[ind++];
+
+				for (uint8_t i=0; i<12;i++){
+					DieBieMScells.cellsVoltage[i] = buffer_get_float16(message, 1000.0, &ind);
+				}
+
+				return true;
+			break;
+
+			default:
+				return false;
+			break;
+		}
 	}
 }
 
 bool VescUart::getVescValues(void) {
-
-	uint8_t command[1] = { COMM_GET_VALUES };
+	uint8_t command[1];
+	command[0] = { COMM_GET_VALUES };
 	uint8_t payload[256];
 
 	packSendPayload(command, 1);
@@ -216,8 +329,8 @@ bool VescUart::getVescValues(void) {
 
 	int lenPayload = receiveUartMessage(payload);
 
-	if (lenPayload > 55) {
-		bool read = processReadPacket(payload); //returns true if sucessful
+	if (lenPayload > 0 && lenPayload < 55) {
+		bool read = processReadPacket(false, payload); //returns true if sucessful
 		return read;
 	}
 	else
@@ -225,6 +338,208 @@ bool VescUart::getVescValues(void) {
 		return false;
 	}
 }
+
+bool VescUart::getVescValuesSelective(uint32_t mask) {
+	uint8_t command[5];
+	command[0] = { COMM_GET_VALUES_SELECTIVE };
+	command[1] = { mask >> 24 }; //mask MSB
+	command[2] = { mask >> 16 & 0xFF }; //mask
+	command[3] = { mask >> 8 & 0xFF }; //mask
+	command[4] = { mask & 0xFF }; //mask LSB
+	uint8_t payload[256];
+
+	packSendPayload(command, 5);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0 && lenPayload < 55) {
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getVescValuesSetupSelective(uint32_t mask) {
+	uint8_t command[5];
+	command[0] = { COMM_GET_VALUES_SETUP_SELECTIVE };
+	command[1] = { mask >> 24 }; //mask MSB
+	command[2] = { mask >> 16 & 0xFF }; //mask
+	command[3] = { mask >> 8 & 0xFF }; //mask
+	command[4] = { mask & 0xFF }; //mask LSB
+	uint8_t payload[256];
+
+	packSendPayload(command, 5);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0 && lenPayload < 55) {
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getLocalVescPPM(void) {
+
+	uint8_t command[1] = { COMM_GET_DECODED_PPM };
+	uint8_t payload[256];
+
+	packSendPayload(command, 1);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getMasterVescPPM(uint8_t id) {
+
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN };
+	command[1] = id;
+	command[2] = { COMM_GET_DECODED_PPM };
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getLocalVescNun(void){
+	uint8_t command[1] = { COMM_GET_DECODED_CHUK };
+	uint8_t payload[256];
+
+	packSendPayload(command, 1);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+bool VescUart::getMasterVescNun(uint8_t id){
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN };
+	command[1] = id;
+	command[2] = { COMM_GET_DECODED_CHUK };
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getFWversion(void){
+
+	uint8_t command[1] = { COMM_FW_VERSION };
+	uint8_t payload[256];
+
+	packSendPayload(command, 1);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(false, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getDieBieMSValues(uint8_t id) {
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN }; //VESC command
+	command[1] = id;
+	command[2] = { DBMS_COMM_GET_VALUES }; //DieBieMS command
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(true, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool VescUart::getDieBieMSCellsVoltage(uint8_t id) {
+	uint8_t command[3];
+	command[0] = { COMM_FORWARD_CAN }; //VESC command
+	command[1] = id;
+	command[2] = { DBMS_COMM_GET_BMS_CELLS }; //DieBieMS command
+
+	uint8_t payload[256];
+
+	packSendPayload(command, 3);
+	// delay(1); //needed, otherwise data is not read
+
+	int lenPayload = receiveUartMessage(payload);
+
+	if (lenPayload > 0) { //&& lenPayload < 55
+		bool read = processReadPacket(true, payload); //returns true if sucessful
+		return read;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 void VescUart::setNunchuckValues() {
 	int32_t ind = 0;
@@ -235,7 +550,7 @@ void VescUart::setNunchuckValues() {
 	payload[ind++] = nunchuck.valueY;
 	buffer_append_bool(payload, nunchuck.lowerButton, &ind);
 	buffer_append_bool(payload, nunchuck.upperButton, &ind);
-	
+
 	// Acceleration Data. Not used, Int16 (2 byte)
 	payload[ind++] = 0;
 	payload[ind++] = 0;
@@ -291,6 +606,27 @@ void VescUart::setDuty(float duty) {
 	buffer_append_int32(payload, (int32_t)(duty * 100000), &index);
 
 	packSendPayload(payload, 5);
+}
+
+void VescUart::setLocalProfile(bool store, bool forward_can, bool ack, bool divide_by_controllers, float current_min_rel, float current_max_rel, float speed_max_reverse, float speed_max, float duty_min, float duty_max, float watt_min, float watt_max) {
+	int32_t index = 0;
+	uint8_t payload[38];
+
+	payload[index++] = COMM_SET_MCCONF_TEMP_SETUP;
+	payload[index++] ? store : 1, 0;
+	payload[index++] ? forward_can : 1, 0;
+	payload[index++] ? ack : 1, 0;
+	payload[index++] ? divide_by_controllers : 1, 0;
+	buffer_append_float32(payload, current_min_rel, 1.0, &index);
+	buffer_append_float32(payload, current_max_rel, 1.0, &index);
+	buffer_append_float32(payload, speed_max_reverse, 1.0, &index);
+	buffer_append_float32(payload, speed_max, 1.0, &index);
+	buffer_append_float32(payload, duty_min, 1.0, &index);
+	buffer_append_float32(payload, duty_max, 1.0, &index);
+	buffer_append_float32(payload, watt_min, 1.0, &index);
+	buffer_append_float32(payload, watt_max, 1.0, &index);
+
+	packSendPayload(payload, 38);
 }
 
 void VescUart::serialPrint(uint8_t * data, int len) {

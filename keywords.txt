@@ -21,3 +21,10 @@ setCurrent			KEYWORD2
 setBrakeCurrent		KEYWORD2
 setRPM				KEYWORD2
 setDuty				KEYWORD2
+getLocalVescPPM     KEYWORD2
+getMasterVescPPM     KEYWORD2
+getLocalVescNun     KEYWORD2
+getMasterVescNun     KEYWORD2
+getFWversion     KEYWORD2
+getDieBieMSValues     KEYWORD2
+getDieBieMSCellsVoltage     KEYWORD2
