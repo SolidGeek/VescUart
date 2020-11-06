@@ -184,7 +184,8 @@ bool VescUart::processReadPacket(uint8_t * message) {
 	switch (packetId){
 		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
-			ind = 4; // Skip the first 4 bytes 
+			data.tempFET            = buffer_get_float16(message, 10.0, &ind);
+			data.tempMotor          = buffer_get_float16(message, 10.0, &ind);
 			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			data.avgInputCurrent 	= buffer_get_float32(message, 100.0, &ind);
 			ind += 8; // Skip the next 8 bytes
