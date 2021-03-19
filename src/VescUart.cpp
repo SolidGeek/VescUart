@@ -197,6 +197,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			ind += 8; // Skip the next 8 bytes 
 			data.tachometer 		= buffer_get_int32(message, &ind);
 			data.tachometerAbs 		= buffer_get_int32(message, &ind);
+			data.fault_code 		= (mc_fault_code) message[ind++];
 			return true;
 
 		break;
