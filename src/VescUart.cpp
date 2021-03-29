@@ -1,7 +1,7 @@
 #include "VescUart.h"
 #include <HardwareSerial.h>
 
-VescUart::VescUart(void){
+VescUart::VescUart(uint32_t timeout_ms) : _TIMEOUT(timeout_ms) {
 	nunchuck.valueX         = 127;
 	nunchuck.valueY         = 127;
 	nunchuck.lowerButton  	= false;
@@ -29,7 +29,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 	uint8_t messageReceived[256];
 	uint16_t lenPayload = 0;
 	
-	uint32_t timeout = millis() + 100; // Defining the timestamp for timeout (100ms before timeout)
+	uint32_t timeout = millis() + _TIMEOUT; // Defining the timestamp for timeout (100ms before timeout)
 
 	while ( millis() < timeout && messageRead == false) {
 
@@ -197,6 +197,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			ind += 8; // Skip the next 8 bytes 
 			data.tachometer 		= buffer_get_int32(message, &ind);
 			data.tachometerAbs 		= buffer_get_int32(message, &ind);
+			data.fault_code 		= (mc_fault_code) message[ind++];
 			return true;
 
 		break;

@@ -21,6 +21,7 @@ class VescUart
 		float ampHoursCharged;
 		long tachometer;
 		long tachometerAbs;
+		mc_fault_code fault_code;
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
@@ -31,12 +32,14 @@ class VescUart
 		bool lowerButton; // valLowerButton
 	};
 
+	//Timeout - specifies how long the function will wait for the vesc to respond
+	const uint32_t _TIMEOUT;
 
 	public:
 		/**
 		 * @brief      Class constructor
 		 */
-		VescUart(void);
+		VescUart(uint32_t timeout_ms = 100);
 
 		/** Variabel to hold measurements returned from VESC */
 		dataPackage data; 
