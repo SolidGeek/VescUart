@@ -8,6 +8,8 @@ Arduino library for interfacing with a VESC over UART. This library is based upo
 
 Added CAN BUS support to all methods, and additional features. Maintaining backwards compatibility where possible so it should be a drop-in replacement for SolidGeek/VescUart@develop which this was forked from.
 
+Note: You can't use a CAN bus ID of 0 for this library (we use this to refer to the local device), so start numbering at 1.
+
 ## Usage
   
 Initialize VescUart class and select Serial port for UART communication.  
