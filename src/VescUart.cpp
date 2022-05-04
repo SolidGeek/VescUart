@@ -188,7 +188,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 	switch (packetId){
 		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
-
+      
 			data.tempMosfet 		= buffer_get_float16(message, 10.0, &ind); 	// 2 bytes - mc_interface_temp_fet_filtered()
 			data.tempMotor 			= buffer_get_float16(message, 10.0, &ind); 	// 2 bytes - mc_interface_temp_motor_filtered()
 			data.avgMotorCurrent 	= buffer_get_float32(message, 100.0, &ind); // 4 bytes - mc_interface_read_reset_avg_motor_current()
@@ -207,7 +207,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.error 				= message[ind++];								// 1 byte  - mc_interface_get_fault()
 			data.pidPos				= buffer_get_float32(message, 1000000.0, &ind);	// 4 bytes - mc_interface_get_pid_pos_now()
 			data.id					= message[ind++];								// 1 byte  - app_get_configuration()->controller_id	
-
+      
 			return true;
 
 		break;
