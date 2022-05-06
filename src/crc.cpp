@@ -18,9 +18,6 @@
     */
 
 #include "crc.h"
-#ifndef NO_STM32
-#include "stm32f4xx.h"
-#endif
 
 // CRC Table
 const unsigned short crc16_tab[] = { 0x0000, 0x1021, 0x2042, 0x3063, 0x4084,
@@ -61,32 +58,3 @@ unsigned short crc16(unsigned char *buf, unsigned int len) {
 	}
 	return cksum;
 }
-
-#ifndef NO_STM32
-/**
-  * @brief  Computes the 32-bit CRC of a given buffer of data word(32-bit) using
-  * Hardware Acceleration.
-  * @param  pBuffer: pointer to the buffer containing the data to be computed
-  * @param  BufferLength: length of the buffer to be computed
-  * @retval 32-bit CRC
-  */
-uint32_t crc32(uint32_t *pBuffer, uint32_t BufferLength) {
-	uint32_t index = 0;
-
-	for(index = 0; index < BufferLength; index++) {
-		CRC->DR = pBuffer[index];
-	}
-
-	return (CRC->DR);
-}
-
-/**
-  * @brief  Resets the CRC Data register (DR).
-  * @param  None
-  * @retval None
-  */
-void crc32_reset(void) {
-	/* Reset CRC generator */
-	CRC->CR |= CRC_CR_RESET;
-}
-#endif

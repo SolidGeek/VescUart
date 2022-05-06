@@ -177,3 +177,34 @@ float buffer_get_float32_auto(const uint8_t *buffer, int32_t *index) {
 
 	return ldexpf(sig, e);
 }
+
+
+bool buffer_get_bool(const uint8_t *buffer, int32_t *index) {
+	
+		if (buffer[*index] == 1)
+		{
+			index++;
+			return true;
+		}
+		else
+		{
+			index++;
+			return false;
+		}
+		
+}
+
+void buffer_append_bool(uint8_t *buffer,bool value, int32_t *index) {
+
+	if (value == true)
+	{
+		buffer[*index] = 1;
+		(*index)++;
+	}
+	else
+	{
+		buffer[*index] = 0;
+		(*index)++;
+	}
+
+}

@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "ch.h"
 
 // Data types
 typedef enum {
@@ -259,45 +258,6 @@ typedef struct {
 	float soc_limit_end;
 	BMS_FWD_CAN_MODE fwd_can_mode;
 } bms_config;
-
-typedef struct {
-	float v_tot;
-	float v_charge;
-	float i_in;
-	float i_in_ic;
-	float ah_cnt;
-	float wh_cnt;
-	int cell_num;
-	float v_cell[32];
-	bool bal_state[32];
-	int temp_adc_num;
-	float temps_adc[10];
-	float temp_ic;
-	float temp_hum;
-	float hum;
-	float temp_max_cell;
-	float soc;
-	float soh;
-	int can_id;
-	float ah_cnt_chg_total;
-	float wh_cnt_chg_total;
-	float ah_cnt_dis_total;
-	float wh_cnt_dis_total;
-	systime_t update_time;
-} bms_values;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float v_cell_min;
-	float v_cell_max;
-	float t_cell_max;
-	float soc;
-	float soh;
-	bool is_charging;
-	bool is_balancing;
-	bool is_charge_allowed;
-} bms_soc_soh_temp_stat;
 
 typedef enum {
 	PID_RATE_25_HZ = 0,
@@ -1186,76 +1146,6 @@ typedef struct {
 } chuck_data;
 
 typedef struct {
-	int id;
-	systime_t rx_time;
-	float rpm;
-	float current;
-	float duty;
-} can_status_msg;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float amp_hours;
-	float amp_hours_charged;
-} can_status_msg_2;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float watt_hours;
-	float watt_hours_charged;
-} can_status_msg_3;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float temp_fet;
-	float temp_motor;
-	float current_in;
-	float pid_pos_now;
-} can_status_msg_4;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float v_in;
-	int32_t tacho_value;
-} can_status_msg_5;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float adc_1;
-	float adc_2;
-	float adc_3;
-	float ppm;
-} can_status_msg_6;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float adc_voltages[4];
-} io_board_adc_values;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	uint64_t inputs;
-} io_board_digial_inputs;
-
-typedef struct {
-	int id;
-	systime_t rx_time;
-	float v_in;
-	float v_out;
-	float temp;
-	bool is_out_on;
-	bool is_pch_on;
-	bool is_dsc_on;
-} psw_status;
-
-typedef struct {
 	uint8_t js_x;
 	uint8_t js_y;
 	bool bt_c;
@@ -1342,20 +1232,6 @@ typedef struct {
 	uint8_t num_vescs;
 } setup_values;
 
-typedef struct {
-	systime_t time_start;
-	double samples;
-	double speed_sum;
-	float max_speed;
-	double power_sum;
-	float max_power;
-	double temp_motor_sum;
-	float max_temp_motor;
-	double temp_mos_sum;
-	float max_temp_mos;
-	double current_sum;
-	float max_current;
-} setup_stats;
 
 #define BACKUP_VAR_INIT_CODE				92891934
 
