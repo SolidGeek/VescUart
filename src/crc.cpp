@@ -1,12 +1,14 @@
 /*
-	Copyright 2012-2014 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+	This file is part of the VESC firmware.
+
+	The VESC firmware is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
+    The VESC firmware is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -15,13 +17,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * crc.c
- *
- *  Created on: 26 feb 2012
- *      Author: benjamin
- */
 #include "crc.h"
+#ifndef NO_STM32
+#include "stm32f4xx.h"
+#endif
 
 // CRC Table
 const unsigned short crc16_tab[] = { 0x0000, 0x1021, 0x2042, 0x3063, 0x4084,
@@ -62,3 +61,32 @@ unsigned short crc16(unsigned char *buf, unsigned int len) {
 	}
 	return cksum;
 }
+
+#ifndef NO_STM32
+/**
+  * @brief  Computes the 32-bit CRC of a given buffer of data word(32-bit) using
+  * Hardware Acceleration.
+  * @param  pBuffer: pointer to the buffer containing the data to be computed
+  * @param  BufferLength: length of the buffer to be computed
+  * @retval 32-bit CRC
+  */
+uint32_t crc32(uint32_t *pBuffer, uint32_t BufferLength) {
+	uint32_t index = 0;
+
+	for(index = 0; index < BufferLength; index++) {
+		CRC->DR = pBuffer[index];
+	}
+
+	return (CRC->DR);
+}
+
+/**
+  * @brief  Resets the CRC Data register (DR).
+  * @param  None
+  * @retval None
+  */
+void crc32_reset(void) {
+	/* Reset CRC generator */
+	CRC->CR |= CRC_CR_RESET;
+}
+#endif
