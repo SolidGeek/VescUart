@@ -1,13 +1,19 @@
 # VescUart
 
-Arduino library for interfacing with a VESC over UART. This library is based upon the library written by RollingGecko (https://github.com/RollingGecko/VescUartControl). The library is updated for the newest VESC firmware (FW3.40) and cleaned up a bit. The library is not backwards compatible, so you have to upload the newest firmware to your VESC.
+Arduino library for interfacing with a VESC over UART. This library is based upon the works of many. The library is tested on a Teensy 4, and is updated for VESC firmware FW5+. The library is not nessecary backwards compatible with older versions of VESC firmware, so please update to the newest firmware available to your VESC.
 
-**Important:** This is not a dropin replacement for RollingGeckos library. You will have to make some changes to your software, as all functions and values is now within a class, see below.
+The library supports only a small amount of features available to the VESC. You are welcome to make a pull request if you integrate new functionality and I will do my best to merge. 
 
-## Implementation
+## CAN BUS support
 
-To use the library you will have initiate the VescUart class and set the Serial port for UART communcation.
+CAN BUS is now supported, such that you can communcate with multiple VESCs over a single UART port. All methods can be called with a CAN ID, and the main VESC will forward the command to the desired CAN Id. 
 
+You can't use a CAN bus ID of 0 for this library, as this is used to refer to the local device; start numbering at 1.
+
+## Usage
+  
+Initialize VescUart class and select Serial port for UART communication.  
+  
 ```cpp
 #include <VescUart.h>
 
@@ -21,11 +27,9 @@ void setup() {
   UART.setSerialPort(&Serial);
 }
 ```
-
-You can now safely use the functions and change the values of the class. 
-
-Getting VESC telemetry is easy:
-
+  
+Getting VESC telemetry:
+  
 ```cpp
 if ( UART.getVescValues() ) {
   Serial.println(UART.data.rpm);
@@ -34,3 +38,6 @@ if ( UART.getVescValues() ) {
   Serial.println(UART.data.tachometerAbs);
 }
 ```
+  
+You can find example usage and more information in the examples directory.  
+  
