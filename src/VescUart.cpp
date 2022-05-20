@@ -157,13 +157,13 @@ int VescUart::packSendPayload(uint8_t * payload, int lenPay) {
 		messageSend[count++] = (uint8_t)(lenPay & 0xFF);
 	}
 
-	memcpy(&messageSend[count], payload, lenPay);
-
+	memcpy(messageSend + count, payload, lenPay);
 	count += lenPay;
+
 	messageSend[count++] = (uint8_t)(crcPayload >> 8);
 	messageSend[count++] = (uint8_t)(crcPayload & 0xFF);
 	messageSend[count++] = 3;
-	messageSend[count] = '\0';
+	// messageSend[count] = NULL;
 	
 	if(debugPort!=NULL){
 		debugPort->print("Package to send: "); serialPrint(messageSend, count);
@@ -217,9 +217,9 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 		break;
 
-		case COMM_GET_VALUES_SELECTIVE:
+		/* case COMM_GET_VALUES_SELECTIVE:
 
-			uint32_t mask = 0xFFFFFFFF;
+			uint32_t mask = 0xFFFFFFFF; */
 
 		default:
 			return false;
@@ -390,7 +390,7 @@ void VescUart::setDuty(float duty, uint8_t canId) {
 	payload[index++] = { COMM_SET_DUTY };
 	buffer_append_int32(payload, (int32_t)(duty * 100000), &index);
 
-	packSendPayload(payload, 5);
+	packSendPayload(payload, payloadSize);
 }
 
 void VescUart::sendKeepalive(void) {
