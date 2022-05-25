@@ -168,13 +168,13 @@ class VescUart
         /**
          * @brief      Send a keepalive message
          */
-        void VescUart::sendKeepalive(void);
+        void sendKeepalive(void);
 
         /**
          * @brief      Send a keepalive message
          * @param      canId  - The CAN ID of the VESC
          */
-        void VescUart::sendKeepalive(uint8_t canId);
+        void sendKeepalive(uint8_t canId);
 
         /**
          * @brief      Help Function to print struct dataPackage over Serial for Debug
@@ -184,7 +184,7 @@ class VescUart
 	private: 
 
 		/** Variabel to hold the reference to the Serial object to use for UART */
-		HardwareSerial* serialPort = NULL;
+		Stream* serialPort = NULL;
 
 		/** Variabel to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */

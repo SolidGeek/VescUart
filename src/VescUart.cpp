@@ -209,7 +209,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.wattHoursCharged	= buffer_get_float32(message, 10000.0, &index);	// 4 bytes - mc_interface_get_watt_hours_charged(false)
 			data.tachometer 		= buffer_get_int32(message, &index);				// 4 bytes - mc_interface_get_tachometer_value(false)
 			data.tachometerAbs 		= buffer_get_int32(message, &index);				// 4 bytes - mc_interface_get_tachometer_abs_value(false)
-			data.error 				= message[index++];								// 1 byte  - mc_interface_get_fault()
+			data.error 				= (mc_fault_code)message[index++];								// 1 byte  - mc_interface_get_fault()
 			data.pidPos				= buffer_get_float32(message, 1000000.0, &index);	// 4 bytes - mc_interface_get_pid_pos_now()
 			data.id					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 

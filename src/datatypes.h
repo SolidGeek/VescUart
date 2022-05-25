@@ -237,7 +237,7 @@ typedef enum {
 	HFI_SAMPLES_8 = 0,
 	HFI_SAMPLES_16,
 	HFI_SAMPLES_32
-} foc_hfi_samples;
+} mc_foc_hfi_samples;
 
 typedef enum {
 	BMS_TYPE_NONE = 0,
@@ -391,7 +391,7 @@ typedef struct {
 	float foc_sl_erpm_hfi;
 	uint16_t foc_hfi_start_samples;
 	float foc_hfi_obs_ovr_sec;
-	foc_hfi_samples foc_hfi_samples;
+	mc_foc_hfi_samples foc_hfi_samples;
 	bool foc_offsets_cal_on_boot;
 	float foc_offsets_current[3];
 	float foc_offsets_voltage[3];
