@@ -203,6 +203,7 @@ int VescUart::packSendPayload(uint8_t *payload, int lenPay)
 	return count;
 }
 
+
 bool VescUart::processReadPacket(uint8_t *message)
 {
 
@@ -244,20 +245,21 @@ bool VescUart::processReadPacket(uint8_t *message)
 
 		break;
 
-	case COMM_GET_DECODED_BALANCE:
-		// 40 byte received 
-		appBalance.pidOutput = buffer_get_float32(message, 1000000.0, &index); // 4 byte  pid output
-		appBalance.pitch = buffer_get_float32(message, 1000000.0, &index);	   // 4 byte 
-		appBalance.roll = buffer_get_float32(message, 1000000.0, &index);	//4 byte 
-		appBalance.diffTime = buffer_get_uint32(message, &index); //4 byte 
-		appBalance.motorCurrent = buffer_get_float32(message, 1000000.0, &index); //4byte 
-		index = index + 4; // unwant skip debug 1 4byte 
-		appBalance.state = buffer_get_uint16(message, &index); //2 byte 
-		appBalance.switchState = buffer_get_uint16(message, &index); //2byte 
-		appBalance.adc1 = buffer_get_float32(message, 1000000.0, &index); //4 byte 
-		appBalance.adc2 = buffer_get_float32(message, 1000000.0, &index);//4byte 
-		index = index + 4; // unwant skip debug 2 4byte 
-
+	case COMM_GET_CUSTOM_CONFIG:
+		// 34 byte received 
+		//balance data 
+		appData.pidOutput = buffer_get_float32(message, 1e6, &index); // 4 byte  pid output
+		appData.pitch = buffer_get_float32(message, 1e6, &index);	   // 4 byte 
+		appData.roll = buffer_get_float32(message, 1e6, &index);	//4 byte 
+		appData.loopTime = buffer_get_uint32(message, &index); //4 byte 
+		appData.motorCurrent = buffer_get_float32(message, 1e6, &index); //4byte 
+		appData.state = buffer_get_uint16(message, &index); //2 byte 
+		appData.switchState = buffer_get_uint16(message, &index); //2byte 
+		//other data 
+		appData.kill_sw_mode = (KILL_SW_MODE)buffer_get_uint16(message, &index); //2byte 
+		appData.dutyCycle = buffer_get_float16(message, 1e3, &index);//2byte 
+		appData.erpm=buffer_get_float32(message, 1e0, &index); //4byte ;
+		appData.inputVoltage=buffer_get_float16(message, 1e1, &index); //2byte ;
 		return true;
 		break;
 	default:
@@ -291,39 +293,6 @@ bool VescUart::getFWversion(uint8_t canId)
 	uint8_t message[256];
 	int messageLength = receiveUartMessage(message);
 	if (messageLength > 0)
-	{
-		return processReadPacket(message);
-	}
-	return false;
-}
-
-bool VescUart::getAppBalanceValues(void)
-{
-	return getAppBalanceValues(0);
-}
-
-bool VescUart::getAppBalanceValues(uint8_t canId)
-{
-	if (debugPort != NULL)
-	{
-		debugPort->println("COMM_GET_DECODED_BALANC " + String(canId));
-	}
-
-	int32_t index = 0;
-	int payloadSize = (canId == 0 ? 1 : 3);
-	uint8_t payload[payloadSize];
-	if (canId != 0)
-	{
-		payload[index++] = {COMM_FORWARD_CAN};
-		payload[index++] = canId;
-	}
-	payload[index++] = {COMM_GET_DECODED_BALANCE};
-	packSendPayload(payload, payloadSize);
-
-	uint8_t message[256];
-	int messageLength = receiveUartMessage(message);
-	
-	if (messageLength >40)
 	{
 		return processReadPacket(message);
 	}
@@ -565,28 +534,87 @@ void VescUart::printVescValues()
 	}
 }
 
-void VescUart::printAppBalanceValues()
+void VescUart::printCustomValues()
 {
 	if (debugPort != NULL)
 	{
 		debugPort->print("pidOutput: ");
-		debugPort->println(appBalance.pidOutput);
+		debugPort->println(appData.pidOutput);
 		debugPort->print("pitch angle: ");
-		debugPort->println(appBalance.pitch);
+		debugPort->println(appData.pitch);
 		debugPort->print("roll angle: ");
-		debugPort->println(appBalance.roll);
+		debugPort->println(appData.roll);
 		debugPort->print("motor current: ");
-		debugPort->println(appBalance.motorCurrent);
+		debugPort->println(appData.motorCurrent);
 		debugPort->print("loop time: ");
-		debugPort->println(appBalance.diffTime);
+		debugPort->println(appData.loopTime);
 		debugPort->print("state: ");
-		debugPort->println(appBalance.state);
+		debugPort->println(appData.state);
 		debugPort->print("switch state: ");
-		debugPort->println(appBalance.switchState);
-		debugPort->print("ADC1: ");
-		debugPort->println(appBalance.adc1);
-		debugPort->print("ADC2: ");
-		debugPort->println(appBalance.adc2);
-		
+		debugPort->println(appData.switchState);
+		debugPort->print("Kill Switch mode: ");
+		debugPort->println(appData.kill_sw_mode);
+		debugPort->print("Input Voltage: ");
+		debugPort->println(appData.inputVoltage);
+		debugPort->print("ERPM: ");
+		debugPort->println(appData.erpm);
+		debugPort->print("Duty Cycle: ");
+		debugPort->println(appData.dutyCycle);
 	}
+}
+/**
+ * @brief 
+ * 
+ * @return true 
+ * @return false 
+ */
+bool VescUart::getCustomValues()
+{
+	return getCustomValues(0);
+
+}
+
+/**
+ * @brief custom data get from vesc 
+ * Balance App:	pid_output (float) 
+ * 				pitch_angle(float)
+ * 				roll_angle(float)
+ * 				loop_time (uint32_t)
+ * 				State(uint16_t)
+ * 				Switch State(uint16_t)
+ * Other 	  :	Kill_sw_mode (uint16_t)
+ * 				duty cycle (float)	
+ * 				erpm (float)
+ * 				input voltage(float)
+ * 
+ * @param canId 
+ * @return true 
+ * @return false 
+ */
+bool VescUart::getCustomValues(uint8_t canId)
+{
+	if (debugPort != NULL)
+	{
+		debugPort->println("COMM_GET_CUSTOM_CONFIG " + String(canId));
+	}
+
+	int32_t index = 0;
+	int payloadSize = (canId == 0 ? 1 : 3);
+	uint8_t payload[payloadSize];
+	if (canId != 0)
+	{
+		payload[index++] = {COMM_GET_CUSTOM_CONFIG};
+		payload[index++] = canId;
+	}
+	payload[index++] = {COMM_GET_CUSTOM_CONFIG};
+	packSendPayload(payload, payloadSize);
+
+	uint8_t message[256];
+	int messageLength = receiveUartMessage(message);
+	
+	if (messageLength >34)
+	{
+		return processReadPacket(message);
+	}
+	return false;
 }

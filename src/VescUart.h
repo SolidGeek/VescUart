@@ -30,19 +30,23 @@ class   VescUart
     mc_fault_code error;
   };
 
-  struct dataBalance
-  { // Structure defined here	https://github.com/spencer1979/bldc/blob/b225431fbfbc6e178bcaa7ddc40a1933eee25ef4/commands.c#L702
+  struct customData
+  { 
     float pidOutput;
     float pitch;
     float roll;
-    uint32_t diffTime;
+    uint32_t loopTime;
     float motorCurrent;
     //float debug1; // unwant skip it 
     uint16_t state;
     uint16_t switchState;
-    float adc1;
-    float adc2;
+    //float adc1;
+    //float adc2;
     //int32_t debug2; //unwant skip it 
+    KILL_SW_MODE kill_sw_mode;
+    float dutyCycle;
+    float erpm;
+    float inputVoltage;
   };
 
   /** Struct to hold the nunchuck values to send over UART */
@@ -72,7 +76,7 @@ public:
   /** Variabel to hold measurements returned from VESC */
   dataPackage data;
   
-  dataBalance appBalance;
+  customData appData;
   /** Variabel to hold nunchuck values */
   nunchuckPackage nunchuck;
 
@@ -202,19 +206,21 @@ public:
    * @brief      Help Function to print struct dataPackage over Serial for Debug
    * 
    */
-  void printAppBalanceValues(void);
+  void printCustomValues(void);
   /**
    * @brief get the balance data
    *
    */
- bool getAppBalanceValues(void);
+bool getCustomValues( uint8_t canId);
+/**
+ * @brief Get the Custom Config object
+ * 
+ * @return true 
+ * @return false 
+ */
+bool getCustomValues( );
 
-  /**
-   * @brief Get the Balance Values object
-   *
-   * @param canId -The CAN ID of the VESC
-   */
- bool getAppBalanceValues(uint8_t canId);
+
 
 private:
   /** Variabel to hold the reference to the Serial object to use for UART */
