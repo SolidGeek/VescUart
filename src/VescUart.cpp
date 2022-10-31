@@ -256,7 +256,7 @@ bool VescUart::processReadPacket(uint8_t *message)
 		appData.state = buffer_get_uint16(message, &index); //2 byte 
 		appData.switchState = buffer_get_uint16(message, &index); //2byte 
 		//other data 
-		appData.kill_sw_mode = (KILL_SW_MODE)buffer_get_uint16(message, &index); //2byte 
+		appData.vescId = buffer_get_uint16(message, &index); //2byte 
 		appData.dutyCycle = buffer_get_float16(message, 1e3, &index);//2byte 
 		appData.erpm=buffer_get_float32(message, 1e0, &index); //4byte ;
 		appData.inputVoltage=buffer_get_float16(message, 1e1, &index); //2byte ;
@@ -552,8 +552,8 @@ void VescUart::printCustomValues()
 		debugPort->println(appData.state);
 		debugPort->print("switch state: ");
 		debugPort->println(appData.switchState);
-		debugPort->print("Kill Switch mode: ");
-		debugPort->println(appData.kill_sw_mode);
+		debugPort->print("VESC vescId: ");
+		debugPort->println(appData.vescId);
 		debugPort->print("Input Voltage: ");
 		debugPort->println(appData.inputVoltage);
 		debugPort->print("ERPM: ");

@@ -43,7 +43,7 @@ class   VescUart
     //float adc1;
     //float adc2;
     //int32_t debug2; //unwant skip it 
-    KILL_SW_MODE kill_sw_mode;
+    uint16_t vescId;
     float dutyCycle;
     float erpm;
     float inputVoltage;
