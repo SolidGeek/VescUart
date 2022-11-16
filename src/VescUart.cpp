@@ -672,15 +672,6 @@ uint16_t VescUart::getVescId()
  * @brief return VESC ID to control Audio source  
  * should call updateCustomValues() first.
  */
-uint16_t VescUart::getVescId()
-{
-	return appData.vescId;
-}
-
-/**
- * @brief return VESC ID to control Audio source  
- * should call updateCustomValues() first.
- */
 float VescUart::getMotorCurrent()
 {
 	return appData.motorCurrent;
