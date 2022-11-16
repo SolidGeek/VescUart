@@ -76,7 +76,7 @@ public:
   /** Variabel to hold measurements returned from VESC */
   dataPackage data;
   
-  customData appData;
+ 
   /** Variabel to hold nunchuck values */
   nunchuckPackage nunchuck;
 
@@ -211,15 +211,34 @@ public:
    * @brief get the balance data
    *
    */
-bool getCustomValues( uint8_t canId);
+bool updateCustomValues( uint8_t canId);
 /**
  * @brief Get the Custom Config object
  * 
  * @return true 
  * @return false 
  */
-bool getCustomValues( );
-
+bool updateCustomValues( );
+/**
+ * @brief Return PID OUTPUT 
+ * should call updateCustomValues() first.
+ */
+float getPidOUtput();
+/**
+ * @brief return erpm 
+ * should call updateCustomValues() first.
+ */
+float getErpm();
+/**
+ * @brief return Switch state 
+ * should call updateCustomValues() first.
+ */
+uint16_t getSwitchState();
+/**
+ * @brief return VESC ID to control Audio source  
+ * should call updateCustomValues() first.
+ */
+uint16_t getVescId();
 
 
 private:
@@ -230,6 +249,8 @@ private:
    * Uses the class Stream instead of HarwareSerial */
   Stream *debugPort = NULL;
 
+  customData appData;
+  
   /**
    * @brief      Packs the payload and sends it over Serial
    *

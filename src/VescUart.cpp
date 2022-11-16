@@ -7,6 +7,18 @@ VescUart::VescUart(uint32_t timeout_ms) : _TIMEOUT(timeout_ms)
 	nunchuck.valueY = 127;
 	nunchuck.lowerButton = false;
 	nunchuck.upperButton = false;
+
+	appData.dutyCycle=0;
+	appData.erpm=0;
+	appData.inputVoltage=0;
+	appData.loopTime=0;
+	appData.motorCurrent=0;
+	appData.pidOutput=0;
+	appData.pitch=0;
+	appData.roll=0;
+	appData.state=0;
+	appData.switchState=0;
+	appData.vescId=0;
 }
 
 void VescUart::setSerialPort(Stream *port)
@@ -260,6 +272,7 @@ bool VescUart::processReadPacket(uint8_t *message)
 		appData.dutyCycle = buffer_get_float16(message, 1e3, &index);//2byte 
 		appData.erpm=buffer_get_float32(message, 1e0, &index); //4byte ;
 		appData.inputVoltage=buffer_get_float16(message, 1e1, &index); //2byte ;
+		
 		return true;
 		break;
 	default:
@@ -568,9 +581,9 @@ void VescUart::printCustomValues()
  * @return true 
  * @return false 
  */
-bool VescUart::getCustomValues()
+bool VescUart::updateCustomValues()
 {
-	return getCustomValues(0);
+	return updateCustomValues(0);
 
 }
 
@@ -582,7 +595,7 @@ bool VescUart::getCustomValues()
  * 				loop_time (uint32_t)
  * 				State(uint16_t)
  * 				Switch State(uint16_t)
- * Other 	  :	Kill_sw_mode (uint16_t)
+ * Other 	  :	vesc id (uint16_t)
  * 				duty cycle (float)	
  * 				erpm (float)
  * 				input voltage(float)
@@ -591,7 +604,7 @@ bool VescUart::getCustomValues()
  * @return true 
  * @return false 
  */
-bool VescUart::getCustomValues(uint8_t canId)
+bool VescUart::updateCustomValues(uint8_t canId)
 {
 	if (debugPort != NULL)
 	{
@@ -618,3 +631,40 @@ bool VescUart::getCustomValues(uint8_t canId)
 	}
 	return false;
 }
+
+
+/**
+ * @brief Return PID OUTPUT 
+ * should call updateCustomValues() first.
+ */
+float VescUart::getPidOUtput()
+{
+ return appData.pidOutput;
+}
+/**
+ * @brief return erpm 
+ * should call updateCustomValues() first.
+ */
+float VescUart::getErpm()
+{
+
+	return appData.erpm;
+}
+/**
+ * @brief return Switch state 
+ * should call updateCustomValues() first.
+ */
+uint16_t VescUart::getSwitchState()
+{
+	return appData.switchState;
+}
+/**
+ * @brief return VESC ID to control Audio source  
+ * should call updateCustomValues() first.
+ */
+uint16_t VescUart::getVescId()
+{
+	return appData.vescId;
+}
+
+
