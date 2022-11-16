@@ -239,7 +239,12 @@ uint16_t getSwitchState();
  * should call updateCustomValues() first.
  */
 uint16_t getVescId();
-
+/**
+ * @brief Get the Motor Current object
+ * 
+ * @return should call updateCustomValues() first.
+ */
+float getMotorCurrent();
 
 private:
   /** Variabel to hold the reference to the Serial object to use for UART */
@@ -293,6 +298,12 @@ private:
    * @param      len   - Lenght of the array to print
    */
   void serialPrint(uint8_t *data, int len);
+
+
+
+
+
+
 };
 
 #endif
