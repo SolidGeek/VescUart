@@ -10,8 +10,8 @@ class VescUart
 {
 
 	/** Struct to store the telemetry data returned by the VESC */
-	struct dataPackage {
-       float avgMotorCurrent;
+	typedef struct {
+        float avgMotorCurrent;
         float avgInputCurrent;
         float dutyCycleNow;
         float rpm;
@@ -27,20 +27,20 @@ class VescUart
         float pidPos;
         uint8_t id;
         mc_fault_code error; 
-	};
+	} vesc_telemetry_t;
 
 	/** Struct to hold the nunchuck values to send over UART */
-	struct nunchuckPackage {
+	typedef struct  {
 		int	valueX;
 		int	valueY;
 		bool upperButton; // valUpperButton
 		bool lowerButton; // valLowerButton
-	};
+	} vesc_nunchuck_t;
 
-    struct FWversionPackage {
+    typedef struct {
         uint8_t major;
         uint8_t minor;
-    };
+    } vesc_firmware_t ;
 
 	//Timeout - specifies how long the function will wait for the vesc to respond
 	const uint32_t _TIMEOUT;
@@ -52,13 +52,13 @@ class VescUart
 		VescUart(uint32_t timeout_ms = 100);
 
 		/** Variabel to hold measurements returned from VESC */
-		dataPackage data; 
+		vesc_telemetry_t data; 
 
 		/** Variabel to hold nunchuck values */
-		nunchuckPackage nunchuck; 
+		vesc_nunchuck_t nunchuck; 
 
        /** Variable to hold firmware version */
-        FWversionPackage fw_version; 
+        vesc_firmware_t fw_version; 
 
         /**
          * @brief      Set the serial port for uart communication
