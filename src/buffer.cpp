@@ -183,12 +183,12 @@ bool buffer_get_bool(const uint8_t *buffer, int32_t *index) {
 	
 		if (buffer[*index] == 1)
 		{
-			index++;
+			(*index)++;
 			return true;
 		}
 		else
 		{
-			index++;
+			(*index)++;
 			return false;
 		}
 		
