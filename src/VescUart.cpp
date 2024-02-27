@@ -217,6 +217,22 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 		break;
 
+		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/31a313129ded1d355a921c572854820921d3030a/commands.c#L995
+
+			data.imuRoll			= buffer_get_float32(message, 1.0, &index);
+			data.imuPitch			= buffer_get_float32(message, 1.0, &index);
+			data.imuYaw 			= buffer_get_float32(message, 1.0, &index);
+			data.accX				= buffer_get_float32(message, 1.0, &index);
+			data.accY				= buffer_get_float32(message, 1.0, &index);
+			data.accZ				= buffer_get_float32(message, 1.0, &index);
+			data.gyroX				= buffer_get_float32(message, 1.0, &index);
+			data.gyroY				= buffer_get_float32(message, 1.0, &index);
+			data.gyroZ				= buffer_get_float32(message, 1.0, &index);
+
+			return true;
+
+		break;
+
 		/* case COMM_GET_VALUES_SELECTIVE:
 
 			uint32_t mask = 0xFFFFFFFF; */
@@ -436,5 +452,14 @@ void VescUart::printVescValues() {
 		debugPort->print("tempMosfet: "); 		debugPort->println(data.tempMosfet);
 		debugPort->print("tempMotor: "); 		debugPort->println(data.tempMotor);
 		debugPort->print("error: "); 			debugPort->println(data.error);
+		debugPort->print("imuRoll: "); 			debugPort->println(data.imuRoll);
+		debugPort->print("imuPitch: "); 		debugPort->println(data.imuPitch);
+		debugPort->print("imuYaw: "); 			debugPort->println(data.imuYaw);
+		debugPort->print("accX: "); 			debugPort->println(data.accX);
+		debugPort->print("accY: "); 			debugPort->println(data.accY);
+		debugPort->print("accZ: "); 			debugPort->println(data.accZ);
+		debugPort->print("gyroX: "); 			debugPort->println(data.gyroX);
+		debugPort->print("gyroY: "); 			debugPort->println(data.gyroY);
+		debugPort->print("gyroZ: "); 			debugPort->println(data.gyroZ);
 	}
 }

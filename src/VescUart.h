@@ -27,6 +27,15 @@ class VescUart
         float pidPos;
         uint8_t id;
         mc_fault_code error; 
+        float imuRoll;
+        float imuPitch;
+        float imuYaw;
+        float accX;
+        float accY;
+        float accZ;
+        float gyroX;
+        float gyroY;
+        float gyroZ; 
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
