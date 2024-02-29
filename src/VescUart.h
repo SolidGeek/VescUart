@@ -60,10 +60,10 @@ class VescUart
 		 */
 		VescUart(uint32_t timeout_ms = 100);
 
-		/** Variabel to hold measurements returned from VESC */
+		/** Variable to hold measurements returned from VESC */
 		dataPackage data; 
 
-		/** Variabel to hold nunchuck values */
+		/** Variable to hold nunchuck values */
 		nunchuckPackage nunchuck; 
 
        /** Variable to hold firmware version */
@@ -192,10 +192,10 @@ class VescUart
 
 	private: 
 
-		/** Variabel to hold the reference to the Serial object to use for UART */
+		/** Variable to hold the reference to the Serial object to use for UART */
 		Stream* serialPort = NULL;
 
-		/** Variabel to hold the reference to the Serial object to use for debugging. 
+		/** Variable to hold the reference to the Serial object to use for debugging. 
 		  * Uses the class Stream instead of HarwareSerial */
 		Stream* debugPort = NULL;
 
@@ -212,7 +212,7 @@ class VescUart
 		 * @brief      Receives the message over Serial
 		 *
 		 * @param      payloadReceived  - The received payload as a unit8_t Array
-		 * @return     The number of bytes receeived within the payload
+		 * @return     The number of bytes received within the payload
 		 */
 		int receiveUartMessage(uint8_t * payloadReceived);
 
@@ -220,7 +220,7 @@ class VescUart
 		 * @brief      Verifies the message (CRC-16) and extracts the payload
 		 *
 		 * @param      message  - The received UART message
-		 * @param      lenMes   - The lenght of the message
+		 * @param      lenMes   - The length of the message
 		 * @param      payload  - The final payload ready to extract data from
 		 * @return     True if the process was a success
 		 */
@@ -238,7 +238,7 @@ class VescUart
 		 * @brief      Help Function to print uint8_t array over Serial for Debug
 		 *
 		 * @param      data  - Data array to print
-		 * @param      len   - Lenght of the array to print
+		 * @param      len   - Length of the array to print
 		 */
 		void serialPrint(uint8_t * data, int len);
 

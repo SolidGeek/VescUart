@@ -59,7 +59,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 
 					default:
 						if( debugPort != NULL ){
-							debugPort->println("Unvalid start bit");
+							debugPort->println("Invalid start bit");
 						}
 					break;
 				}
