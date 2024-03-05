@@ -217,7 +217,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 		break;
 
-		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/31a313129ded1d355a921c572854820921d3030a/commands.c#L995
+		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/c8be115bb5be5a5558e3a50ba82e55931e3a45c4/comm/commands.c#L1111
 
 			data.imuRoll			= buffer_get_float32(message, 1.0, &index);
 			data.imuPitch			= buffer_get_float32(message, 1.0, &index);
