@@ -111,6 +111,21 @@ class VescUart
      */
     bool getVescValues(uint8_t canId);
 
+     /**
+     * @brief      Sends a command to VESC and stores the returned IMU data
+     *
+     * @return     True if successfull otherwise false
+     */
+    bool getImuData(void);
+
+    /**
+     * @brief      Sends a command to VESC and stores the returned IMU data
+     * @param      canId  - The CAN ID of the VESC
+     *
+     * @return     True if successfull otherwise false
+     */
+    bool getImuData(uint8_t canId);
+
     /**
      * @brief      Sends values for joystick and buttons to the nunchuck app
      */

@@ -298,6 +298,37 @@ bool VescUart::getVescValues(uint8_t canId) {
 	}
 	return false;
 }
+
+bool VescUart::getImuData(void) {
+	return getImuData(0);
+}
+
+bool VescUart::getImuData(uint8_t canId) {
+
+	if (debugPort!=NULL){
+		debugPort->println("Command: COMM_GET_IMU_DATA "+String(canId));
+	}
+
+	int32_t index = 0;
+	int payloadSize = (canId == 0 ? 1 : 3);
+	uint8_t payload[payloadSize];
+	if (canId != 0) {
+		payload[index++] = { COMM_FORWARD_CAN };
+		payload[index++] = canId;
+	}
+	payload[index++] = { COMM_GET_IMU_DATA};
+
+	packSendPayload(payload, payloadSize);
+
+	uint8_t message[256];
+	int messageLength = receiveUartMessage(message);
+
+	if (messageLength > 55) {
+		return processReadPacket(message); 
+	}
+	return false;
+}
+
 void VescUart::setNunchuckValues() {
 	return setNunchuckValues(0);
 }
