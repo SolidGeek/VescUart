@@ -228,7 +228,9 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.gyroX				= buffer_get_float32(message, 1.0, &index);
 			data.gyroY				= buffer_get_float32(message, 1.0, &index);
 			data.gyroZ				= buffer_get_float32(message, 1.0, &index);
+			index += 4*7;
 
+			data.id					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 			return true;
 
 		break;
@@ -310,7 +312,7 @@ bool VescUart::getImuData(uint8_t canId) {
 	}
 
 	int32_t index = 0;
-	int payloadSize = (canId == 0 ? 1 : 3);
+	int payloadSize = (canId == 0 ? 1 : 3); // Not sure if correct. Needs additional testing
 	uint8_t payload[payloadSize];
 	if (canId != 0) {
 		payload[index++] = { COMM_FORWARD_CAN };
