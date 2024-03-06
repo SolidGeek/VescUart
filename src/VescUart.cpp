@@ -230,7 +230,7 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.gyroZ				= buffer_get_float32(message, 1.0, &index);
 			index += 4*7;
 
-			data.id					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
+			data.idimu					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 			return true;
 
 		break;

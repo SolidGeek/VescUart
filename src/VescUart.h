@@ -35,7 +35,8 @@ class VescUart
         float accZ;
         float gyroX;
         float gyroY;
-        float gyroZ; 
+        float gyroZ;
+        uint8_t idimu;
 	};
 
 	/** Struct to hold the nunchuck values to send over UART */
