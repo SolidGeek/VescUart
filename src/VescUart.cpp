@@ -319,6 +319,7 @@ bool VescUart::getImuData(uint8_t canId) {
 		payload[index++] = canId;
 	}
 	payload[index++] = { COMM_GET_IMU_DATA};
+	payload[index++] = {1}; // Not sure if correct. Needs additional testing
 
 	packSendPayload(payload, payloadSize);
 
