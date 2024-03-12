@@ -229,7 +229,9 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.gyroY				= buffer_get_float32(message, 1.0, &index);
 			data.gyroZ				= buffer_get_float32(message, 1.0, &index);
 			index += 4*7;
-
+			if (debugPort!=NULL){
+				debugPort->println("IMU DATA READ:  "+String(canId));
+				}
 			data.idimu					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 			return true;
 
