@@ -188,10 +188,11 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 	switch (packetId){
 		case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
-
 			fw_version.major = message[index++];
 			fw_version.minor = message[index++];
-			return true;
+			
+            return true;
+        break;
 		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
 			data.tempMosfet 		= buffer_get_float16(message, 10.0, &index); 	// 2 bytes - mc_interface_temp_fet_filtered()
@@ -214,7 +215,6 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.id					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 
 			return true;
-
 		break;
 
 		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/c8be115bb5be5a5558e3a50ba82e55931e3a45c4/comm/commands.c#L1111
@@ -239,17 +239,14 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			//data.imuID			= message[index] // Last byte should have the ID of the VESC but it seems like its 	
 	
 			return true;
-
 		break;
-
-		/* case COMM_GET_VALUES_SELECTIVE:
-
-			uint32_t mask = 0xFFFFFFFF; */
 
 		default:
 			return false;
 		break;
 	}
+
+    return false;
 }
 
 bool VescUart::getFWversion(void){
