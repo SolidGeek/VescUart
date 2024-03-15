@@ -59,7 +59,7 @@ int VescUart::receiveUartMessage(uint8_t * payloadReceived) {
 
 					default:
 						if( debugPort != NULL ){
-							debugPort->println("Unvalid start bit");
+							debugPort->println("Invalid start bit");
 						}
 					break;
 				}
@@ -188,10 +188,11 @@ bool VescUart::processReadPacket(uint8_t * message) {
 
 	switch (packetId){
 		case COMM_FW_VERSION: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
-
 			fw_version.major = message[index++];
 			fw_version.minor = message[index++];
-			return true;
+			
+            return true;
+        break;
 		case COMM_GET_VALUES: // Structure defined here: https://github.com/vedderb/bldc/blob/43c3bbaf91f5052a35b75c2ff17b5fe99fad94d1/commands.c#L164
 
 			data.tempMosfet 		= buffer_get_float16(message, 10.0, &index); 	// 2 bytes - mc_interface_temp_fet_filtered()
@@ -214,17 +215,38 @@ bool VescUart::processReadPacket(uint8_t * message) {
 			data.id					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
 
 			return true;
-
 		break;
 
-		/* case COMM_GET_VALUES_SELECTIVE:
-
-			uint32_t mask = 0xFFFFFFFF; */
+		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/c8be115bb5be5a5558e3a50ba82e55931e3a45c4/comm/commands.c#L1111
+			
+			data.imuMask			= buffer_get_uint16(message, &index); // Skip 2 bytes for mask
+			data.imuRoll			= buffer_get_float32_auto(message, &index);
+			data.imuPitch			= buffer_get_float32_auto(message, &index);
+			data.imuYaw 			= buffer_get_float32_auto(message, &index);
+			data.accX				= buffer_get_float32_auto(message, &index);
+			data.accY				= buffer_get_float32_auto(message, &index);
+			data.accZ				= buffer_get_float32_auto(message, &index);
+			data.gyroX				= buffer_get_float32_auto(message, &index);
+			data.gyroY				= buffer_get_float32_auto(message, &index);
+			data.gyroZ				= buffer_get_float32_auto(message, &index);
+			data.magX				= buffer_get_float32_auto(message, &index);
+			data.magY				= buffer_get_float32_auto(message, &index);
+			data.magZ				= buffer_get_float32_auto(message, &index);
+			data.q0					= buffer_get_float32_auto(message, &index);
+			data.q1					= buffer_get_float32_auto(message, &index);
+			data.q2					= buffer_get_float32_auto(message, &index);
+			data.q3					= buffer_get_float32_auto(message, &index);
+			//data.imuID			= message[index] // Last byte should have the ID of the VESC but it seems like its 	
+	
+			return true;
+		break;
 
 		default:
 			return false;
 		break;
 	}
+
+    return false;
 }
 
 bool VescUart::getFWversion(void){
@@ -282,6 +304,39 @@ bool VescUart::getVescValues(uint8_t canId) {
 	}
 	return false;
 }
+
+bool VescUart::getImuData(void) {
+	return getImuData(0);
+}
+
+bool VescUart::getImuData(uint8_t canId) {
+
+	if (debugPort!=NULL){
+		debugPort->println("Command: COMM_GET_IMU_DATA "+String(canId));
+	}
+
+	int32_t index = 0;
+	int payloadSize = (canId == 0 ? 3: 5);
+	uint8_t payload[payloadSize];
+	if (canId != 0) {
+		payload[index++] = { COMM_FORWARD_CAN };
+		payload[index++] = canId;
+	}
+	payload[index++] = { COMM_GET_IMU_DATA};
+	payload[index++] = 0xFF; // Add Mask
+	payload[index++] = 0xFF; // Add Mask
+
+	packSendPayload(payload, payloadSize);
+
+	uint8_t message[256];
+	int messageLength = receiveUartMessage(message);
+
+	if (messageLength > 65) { // Message length should be at least 67 (set to 65)
+		return processReadPacket(message); 
+	}
+	return false;
+}
+
 void VescUart::setNunchuckValues() {
 	return setNunchuckValues(0);
 }
@@ -436,5 +491,14 @@ void VescUart::printVescValues() {
 		debugPort->print("tempMosfet: "); 		debugPort->println(data.tempMosfet);
 		debugPort->print("tempMotor: "); 		debugPort->println(data.tempMotor);
 		debugPort->print("error: "); 			debugPort->println(data.error);
+		debugPort->print("imuRoll: "); 			debugPort->println(data.imuRoll);
+		debugPort->print("imuPitch: "); 		debugPort->println(data.imuPitch);
+		debugPort->print("imuYaw: "); 			debugPort->println(data.imuYaw);
+		debugPort->print("accX: "); 			debugPort->println(data.accX);
+		debugPort->print("accY: "); 			debugPort->println(data.accY);
+		debugPort->print("accZ: "); 			debugPort->println(data.accZ);
+		debugPort->print("gyroX: "); 			debugPort->println(data.gyroX);
+		debugPort->print("gyroY: "); 			debugPort->println(data.gyroY);
+		debugPort->print("gyroZ: "); 			debugPort->println(data.gyroZ);
 	}
 }
