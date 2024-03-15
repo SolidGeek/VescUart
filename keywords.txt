@@ -21,3 +21,4 @@ setCurrent			KEYWORD2
 setBrakeCurrent		KEYWORD2
 setRPM				KEYWORD2
 setDuty				KEYWORD2
+getImuData          KEYWORD2
