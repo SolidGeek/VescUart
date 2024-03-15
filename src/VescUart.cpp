@@ -218,21 +218,26 @@ bool VescUart::processReadPacket(uint8_t * message) {
 		break;
 
 		case COMM_GET_IMU_DATA: // Structure defined here: https://github.com/vedderb/bldc/blob/c8be115bb5be5a5558e3a50ba82e55931e3a45c4/comm/commands.c#L1111
-
-			data.imuRoll			= buffer_get_float32(message, 1.0, &index);
-			data.imuPitch			= buffer_get_float32(message, 1.0, &index);
-			data.imuYaw 			= buffer_get_float32(message, 1.0, &index);
-			data.accX				= buffer_get_float32(message, 1.0, &index);
-			data.accY				= buffer_get_float32(message, 1.0, &index);
-			data.accZ				= buffer_get_float32(message, 1.0, &index);
-			data.gyroX				= buffer_get_float32(message, 1.0, &index);
-			data.gyroY				= buffer_get_float32(message, 1.0, &index);
-			data.gyroZ				= buffer_get_float32(message, 1.0, &index);
-			index += 4*7;
-			if (debugPort!=NULL){
-				debugPort->println("IMU DATA READ:  "+String(canId));
-				}
-			data.idimu					= message[index++];								// 1 byte  - app_get_configuration()->controller_id	
+			
+			data.imuMask			= buffer_get_uint16(message, &index); // Skip 2 bytes for mask
+			data.imuRoll			= buffer_get_float32_auto(message, &index);
+			data.imuPitch			= buffer_get_float32_auto(message, &index);
+			data.imuYaw 			= buffer_get_float32_auto(message, &index);
+			data.accX				= buffer_get_float32_auto(message, &index);
+			data.accY				= buffer_get_float32_auto(message, &index);
+			data.accZ				= buffer_get_float32_auto(message, &index);
+			data.gyroX				= buffer_get_float32_auto(message, &index);
+			data.gyroY				= buffer_get_float32_auto(message, &index);
+			data.gyroZ				= buffer_get_float32_auto(message, &index);
+			data.magX				= buffer_get_float32_auto(message, &index);
+			data.magY				= buffer_get_float32_auto(message, &index);
+			data.magZ				= buffer_get_float32_auto(message, &index);
+			data.q0					= buffer_get_float32_auto(message, &index);
+			data.q1					= buffer_get_float32_auto(message, &index);
+			data.q2					= buffer_get_float32_auto(message, &index);
+			data.q3					= buffer_get_float32_auto(message, &index);
+			//data.imuID			= message[index] // Last byte should have the ID of the VESC but it seems like its 	
+	
 			return true;
 
 		break;
@@ -314,21 +319,22 @@ bool VescUart::getImuData(uint8_t canId) {
 	}
 
 	int32_t index = 0;
-	int payloadSize = (canId == 0 ? 1 : 3); // Not sure if correct. Needs additional testing
+	int payloadSize = (canId == 0 ? 3: 5);
 	uint8_t payload[payloadSize];
 	if (canId != 0) {
 		payload[index++] = { COMM_FORWARD_CAN };
 		payload[index++] = canId;
 	}
 	payload[index++] = { COMM_GET_IMU_DATA};
-	payload[index++] = 0xFFFF; // Not sure if correct. Needs additional testing
+	payload[index++] = 0xFF; // Add Mask
+	payload[index++] = 0xFF; // Add Mask
 
 	packSendPayload(payload, payloadSize);
 
 	uint8_t message[256];
 	int messageLength = receiveUartMessage(message);
 
-	if (messageLength > 55) {
+	if (messageLength > 65) { // Message length should be at least 67 (set to 65)
 		return processReadPacket(message); 
 	}
 	return false;
